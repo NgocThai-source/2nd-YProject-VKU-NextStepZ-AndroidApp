@@ -1,0 +1,31 @@
+/* Ẩn Mapbox attribution (logo và copyright) */
+.mapboxgl-ctrl-attrib {
+  display: none !important;
+}
+
+.mapboxgl-ctrl-attrib-button {
+  display: none !important;
+}
+
+/* Ẩn logo Mapbox */
+.mapboxgl-ctrl-logo {
+  display: none !important;
+}
+
+/* Ẩn attribution control hoàn toàn */
+.mapboxgl-ctrl-bottom-left {
+  display: none !important;
+}
+
+/* Mobile responsive fixes */
+@media (max-width: 1023px) {
+  .mapboxgl-ctrl {
+    margin: 10px;
+  }
+  
+  .mapboxgl-ctrl-top-right {
+    top: 10px;
+    right: 10px;
+  }
+}
+

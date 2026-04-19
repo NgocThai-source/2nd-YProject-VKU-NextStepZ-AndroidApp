@@ -1,8 +1,7 @@
 # NextStepZ - Git Ignore
 
-# Web frontend & backend (reference only, not part of Android project)
-frontend/
-backend/
+# Web frontend & backend (reference only, not part of Android project)frontend/
+
 
 # IDE
 .idea/
