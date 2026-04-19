@@ -1,16 +1,17 @@
 package com.example.nextstepz.ui.navigation
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.nextstepz.ui.screens.auth.LoginScreen
 
 // Navigation Routes
 object Routes {
-    const val LOGIN = "login"
-    const val REGISTER = "register"
-    const val FORGOT_PASSWORD = "forgot_password"
     const val HOME = "home"
 }
 
@@ -18,18 +19,21 @@ object Routes {
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Routes.LOGIN
+    startDestination: String = Routes.HOME
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
-        composable(Routes.LOGIN) {
-            LoginScreen(
-                onNavigateToRegister = { },
-                onNavigateToForgotPassword = { },
-                onLoginSuccess = { }
-            )
+        composable(Routes.HOME) {
+            HomeScreen()
         }
+    }
+}
+
+@Composable
+fun HomeScreen() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(text = "Welcome to NextStepZ (Login Removed)")
     }
 }
