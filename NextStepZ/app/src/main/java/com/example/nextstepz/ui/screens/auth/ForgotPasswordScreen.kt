@@ -1,5 +1,6 @@
 package com.example.nextstepz.ui.screens.auth
 
+import android.util.Patterns
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,7 +19,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.MarkEmailRead
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,26 +49,26 @@ import com.example.nextstepz.ui.components.NextStepZTextField
 import com.example.nextstepz.ui.theme.GradientEnd
 import com.example.nextstepz.ui.theme.GradientMid
 import com.example.nextstepz.ui.theme.GradientStart
-import com.example.nextstepz.ui.theme.SuccessGreen
 import com.example.nextstepz.ui.theme.TextPrimary
 import com.example.nextstepz.ui.theme.TextSecondary
 
 /**
- * Forgot Password Screen — Allows users to request a password reset link via email.
+ * Forgot Password Screen — Step 1: Enter email to receive OTP code.
  * Background is rendered at NavGraph level for seamless transitions.
  *
- * Two states:
- * 1. Input state — email field + submit button
- * 2. Success state — confirmation message after submission
+ * Flow: Email Input → OTP Verification → New Password
  */
 @Composable
 fun ForgotPasswordScreen(
     onNavigateBack: () -> Unit,
-    onSubmitClick: (email: String) -> Unit = {}
+    onNavigateToOtp: (email: String) -> Unit = {}
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
-    var isSubmitted by rememberSaveable { mutableStateOf(false) }
+
+    // Email validation
+    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    val showEmailError = email.isNotBlank() && !isEmailValid
 
     Column(
         modifier = Modifier
@@ -112,121 +112,50 @@ fun ForgotPasswordScreen(
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        if (!isSubmitted) {
-            // ─── Input State ────────────────────────────────────
-            GlassCard {
-                // Title
-                Text(
-                    text = "Quên mật khẩu?",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = TextPrimary
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết đặt lại mật khẩu cho bạn.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
+        // ─── Email Input Form ───────────────────────────────────
+        GlassCard {
+            // Title
+            Text(
+                text = "Quên mật khẩu?",
+                style = MaterialTheme.typography.headlineSmall,
+                color = TextPrimary
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Nhập email đã đăng ký, chúng tôi sẽ gửi mã OTP để đặt lại mật khẩu cho bạn.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
+            )
 
-                Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-                // Email field
-                NextStepZTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = "Email",
-                    placeholder = "Nhập email của bạn",
-                    leadingIcon = Icons.Outlined.Email,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    singleLine = true
-                )
+            // Email field
+            NextStepZTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = "Email",
+                placeholder = "Nhập email của bạn",
+                leadingIcon = Icons.Outlined.Email,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                isError = showEmailError,
+                errorMessage = if (showEmailError) "Email không đúng định dạng" else null,
+                singleLine = true
+            )
 
-                Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-                // Submit button
-                GradientButton(
-                    text = "Gửi liên kết đặt lại",
-                    onClick = {
-                        isLoading = true
-                        onSubmitClick(email)
-                        // Simulate success for now (will be replaced by ViewModel)
-                        isSubmitted = true
-                        isLoading = false
-                    },
-                    isLoading = isLoading,
-                    enabled = email.isNotBlank()
-                )
-            }
-        } else {
-            // ─── Success State ──────────────────────────────────
-            GlassCard {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Success icon
-                    Icon(
-                        imageVector = Icons.Outlined.MarkEmailRead,
-                        contentDescription = "Email đã gửi",
-                        tint = SuccessGreen,
-                        modifier = Modifier.size(64.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Text(
-                        text = "Kiểm tra email của bạn!",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = TextPrimary,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Chúng tôi đã gửi liên kết đặt lại mật khẩu đến:",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Show email with gradient
-                    Text(
-                        text = email,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            brush = Brush.horizontalGradient(
-                                listOf(GradientStart, GradientMid, GradientEnd)
-                            )
-                        ),
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Text(
-                        text = "Vui lòng kiểm tra hộp thư đến và thư mục spam.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(28.dp))
-
-                    // Resend button
-                    GradientButton(
-                        text = "Gửi lại email",
-                        onClick = {
-                            isLoading = true
-                            onSubmitClick(email)
-                            isLoading = false
-                        },
-                        isLoading = isLoading
-                    )
-                }
-            }
+            // Submit button — text changed per requirement
+            GradientButton(
+                text = "Gửi mã đặt lại mật khẩu",
+                onClick = {
+                    isLoading = true
+                    // Navigate to OTP screen with the email
+                    onNavigateToOtp(email)
+                    isLoading = false
+                },
+                isLoading = isLoading,
+                enabled = email.isNotBlank() && isEmailValid
+            )
         }
 
         Spacer(modifier = Modifier.height(32.dp))
