@@ -1,5 +1,6 @@
 package com.example.nextstepz.ui.screens.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -44,7 +45,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextstepz.R
+import com.example.nextstepz.auth.data.model.RegisterRequest
 import com.example.nextstepz.ui.components.GlassCard
 import com.example.nextstepz.ui.components.GradientButton
 import com.example.nextstepz.ui.components.NextStepZTextField
@@ -55,26 +60,36 @@ import com.example.nextstepz.ui.theme.InputPlaceholder
 import com.example.nextstepz.ui.theme.TextPrimary
 import com.example.nextstepz.ui.theme.TextSecondary
 
-/**
- * Register Screen — Premium dark themed with glassmorphism design.
- * Background is rendered at NavGraph level for seamless transitions.
- */
 @Composable
 fun RegisterScreen(
     onNavigateToLogin: () -> Unit,
-    onRegisterClick: (fullName: String, email: String, password: String) -> Unit = { _, _, _ -> }
+    viewModel: AuthViewModel = viewModel()
 ) {
+    // Lấy context để hiển thị Toast
+    val context = LocalContext.current
+
     var fullName by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var confirmPasswordVisible by rememberSaveable { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
 
     // Validate confirm password
     val passwordMismatch = confirmPassword.isNotEmpty() && password != confirmPassword
 
+    // ─── LẮNG NGHE TRẠNG THÁI TỪ VIEWMODEL ─────────────────────
+    val authState = viewModel.authState
+    LaunchedEffect(authState) {
+        if(authState is AuthState.Success) {
+            Toast.makeText(context, authState.message, Toast.LENGTH_LONG).show()
+            viewModel.resetState()
+            onNavigateToLogin()
+        }else if(authState is AuthState.Error) {
+            Toast.makeText(context, authState.message, Toast.LENGTH_LONG).show()
+            viewModel.resetState()
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -227,10 +242,9 @@ fun RegisterScreen(
             GradientButton(
                 text = "Đăng ký",
                 onClick = {
-                    isLoading = true
-                    onRegisterClick(fullName, email, password)
+                    val request = RegisterRequest(fullName, email, password)
+                    viewModel.register(request)
                 },
-                isLoading = isLoading,
                 enabled = fullName.isNotBlank() &&
                         email.isNotBlank() &&
                         password.isNotBlank() &&

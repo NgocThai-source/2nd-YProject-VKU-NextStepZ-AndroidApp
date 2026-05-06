@@ -65,9 +65,7 @@ fun NextStepZNavGraph(
                             launchSingleTop = true
                         }
                     },
-                    onLoginClick = { email, password ->
-                        // TODO: Integrate with ViewModel for actual login
-                    }
+
                 )
             }
 
@@ -93,10 +91,8 @@ fun NextStepZNavGraph(
                             popUpTo(Screen.Register.route) { inclusive = true }
                             launchSingleTop = true
                         }
-                    },
-                    onRegisterClick = { fullName, email, password ->
-                        // TODO: Integrate with ViewModel for actual registration
                     }
+
                 )
             }
 
@@ -119,9 +115,6 @@ fun NextStepZNavGraph(
                 ForgotPasswordScreen(
                     onNavigateBack = {
                         navController.popBackStack()
-                    },
-                    onSubmitClick = { email ->
-                        // TODO: Integrate with ViewModel for actual password reset
                     }
                 )
             }

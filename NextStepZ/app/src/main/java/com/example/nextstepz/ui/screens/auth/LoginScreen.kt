@@ -1,5 +1,6 @@
 package com.example.nextstepz.ui.screens.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -43,7 +44,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextstepz.R
+import com.example.nextstepz.auth.data.model.LoginRequest
 
 import com.example.nextstepz.ui.components.GlassCard
 import com.example.nextstepz.ui.components.GradientButton
@@ -63,12 +68,24 @@ import com.example.nextstepz.ui.theme.TextSecondary
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToForgotPassword: () -> Unit = {},
-    onLoginClick: (email: String, password: String) -> Unit = { _, _ -> }
+    viewModel: AuthViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
+
+    val authState = viewModel.authState
+    LaunchedEffect(authState) {
+        if(authState is AuthState.Success){
+            Toast.makeText(context, authState.message, Toast.LENGTH_LONG).show()
+            viewModel.resetState()
+            // onNavigateToHome()
+        }else if(authState is AuthState.Error) {
+            Toast.makeText(context, authState.message, Toast.LENGTH_LONG).show()
+            viewModel.resetState()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -189,10 +206,10 @@ fun LoginScreen(
             GradientButton(
                 text = "Đăng nhập",
                 onClick = {
-                    isLoading = true
-                    onLoginClick(email, password)
+                    val request = LoginRequest(email, password)
+                    viewModel.login(request)
                 },
-                isLoading = isLoading,
+
                 enabled = email.isNotBlank() && password.isNotBlank()
             )
         }
