@@ -1,5 +1,6 @@
 package com.example.nextstepz.ui.screens.auth
 
+import AuthViewModel
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -209,7 +210,7 @@ fun LoginScreen(
                     val request = LoginRequest(email, password)
                     viewModel.login(request)
                 },
-
+                isLoading = authState is AuthState.Loading,
                 enabled = email.isNotBlank() && password.isNotBlank()
             )
         }

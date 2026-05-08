@@ -1,6 +1,7 @@
 package com.example.nextstepz.ui.screens.auth
 
-import android.widget.Toast
+import AuthViewModel
+import  android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -245,6 +246,7 @@ fun RegisterScreen(
                     val request = RegisterRequest(fullName, email, password)
                     viewModel.register(request)
                 },
+                isLoading = authState is AuthState.Loading,
                 enabled = fullName.isNotBlank() &&
                         email.isNotBlank() &&
                         password.isNotBlank() &&

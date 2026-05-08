@@ -1,5 +1,7 @@
 package com.example.nextstepz.ui.screens.auth
 
+import AuthViewModel
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -45,7 +47,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextstepz.R
+import com.example.nextstepz.auth.data.model.ResetPasswordRequest
 import com.example.nextstepz.ui.components.GlassCard
 import com.example.nextstepz.ui.components.GradientButton
 import com.example.nextstepz.ui.components.NextStepZTextField
@@ -67,20 +73,33 @@ import com.example.nextstepz.ui.theme.TextSecondary
 fun NewPasswordScreen(
     email: String,
     onNavigateToLogin: () -> Unit,
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    viewModel: AuthViewModel = viewModel(),
+
 ) {
+    val context = LocalContext.current
+
     var newPassword by rememberSaveable { mutableStateOf("") }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var confirmPasswordVisible by rememberSaveable { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
     var isSuccess by rememberSaveable { mutableStateOf(false) }
-
     // Validate confirm password
     val passwordMismatch = confirmPassword.isNotEmpty() && newPassword != confirmPassword
     // Validate minimum length
     val passwordTooShort = newPassword.isNotEmpty() && newPassword.length < 6
 
+    val authState = viewModel.authState
+    LaunchedEffect(authState) {
+        if(authState is AuthState.Success){
+            Toast.makeText(context, authState.message, Toast.LENGTH_LONG).show()
+            isSuccess = true
+            viewModel.resetState()
+        }else if(authState is AuthState.Error){
+            Toast.makeText(context, authState.message, Toast.LENGTH_LONG).show()
+            viewModel.resetState()
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -221,12 +240,10 @@ fun NewPasswordScreen(
                 GradientButton(
                     text = "Đặt lại mật khẩu",
                     onClick = {
-                        isLoading = true
-                        // Mock: simulate password reset success
-                        isSuccess = true
-                        isLoading = false
+                        val request = ResetPasswordRequest(email, newPassword)
+                        viewModel.resetPassword(request)
                     },
-                    isLoading = isLoading,
+                    isLoading = authState is AuthState.Loading,
                     enabled = newPassword.length >= 6 &&
                             confirmPassword.isNotBlank() &&
                             !passwordMismatch

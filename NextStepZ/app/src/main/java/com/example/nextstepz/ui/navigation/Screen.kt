@@ -24,6 +24,4 @@ sealed class Screen(val route: String) {
             return "new_password?email=${Uri.encode(email)}"
         }
     }
-    // Future screens will be added here
-    // data object Home : Screen("home")
 }

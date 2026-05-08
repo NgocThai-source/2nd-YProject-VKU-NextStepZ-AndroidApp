@@ -1,6 +1,8 @@
 package com.example.nextstepz.ui.screens.auth
 
+import AuthViewModel
 import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -42,7 +44,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextstepz.R
+import com.example.nextstepz.auth.data.model.ForgotPasswordRequest
 import com.example.nextstepz.ui.components.GlassCard
 import com.example.nextstepz.ui.components.GradientButton
 import com.example.nextstepz.ui.components.NextStepZTextField
@@ -61,15 +67,27 @@ import com.example.nextstepz.ui.theme.TextSecondary
 @Composable
 fun ForgotPasswordScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToOtp: (email: String) -> Unit = {}
+    onNavigateToOtp: (email: String) -> Unit = {},
+    viewModel: AuthViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     var email by rememberSaveable { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
 
     // Email validation
     val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email).matches()
     val showEmailError = email.isNotBlank() && !isEmailValid
 
+    val authState = viewModel.authState
+    LaunchedEffect(authState) {
+        if(authState is AuthState.Success){
+            Toast.makeText(context, authState.message, Toast.LENGTH_LONG).show()
+            viewModel.resetState()
+            onNavigateToOtp(email)
+        }else if(authState is AuthState.Error){
+            Toast.makeText(context, authState.message, Toast.LENGTH_LONG).show()
+            viewModel.resetState()
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -148,12 +166,10 @@ fun ForgotPasswordScreen(
             GradientButton(
                 text = "Gửi mã đặt lại mật khẩu",
                 onClick = {
-                    isLoading = true
-                    // Navigate to OTP screen with the email
-                    onNavigateToOtp(email)
-                    isLoading = false
+                    val request = ForgotPasswordRequest(email)
+                    viewModel.forgotPassword(request)
                 },
-                isLoading = isLoading,
+                isLoading = authState is AuthState.Loading,
                 enabled = email.isNotBlank() && isEmailValid
             )
         }
