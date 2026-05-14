@@ -15,13 +15,16 @@ import com.example.nextstepz.ui.components.AnimatedGradientBackground
 import com.example.nextstepz.ui.screens.auth.ForgotPasswordScreen
 import com.example.nextstepz.ui.screens.auth.LoginScreen
 import com.example.nextstepz.ui.screens.auth.RegisterScreen
+import com.example.nextstepz.ui.screens.main.MainScreen
 
 private const val TRANSITION_DURATION = 350
 
 /**
  * Main navigation graph for the app.
- * Background is rendered once at this level so transitions between screens
- * never show a gap/flash. Only the foreground content animates.
+ *
+ * Two distinct flows:
+ * 1. Auth Flow — Login, Register, ForgotPassword (with shared animated background)
+ * 2. Main Flow — MainScreen (houses its own background + BottomNavBar + inner NavHost)
  */
 @Composable
 fun NextStepZNavGraph(
@@ -29,15 +32,16 @@ fun NextStepZNavGraph(
     startDestination: String = Screen.Login.route
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // ─── Persistent background — never re-created during transitions ───
+        // ─── Persistent background for Auth screens ───────────────
+        // MainScreen renders its own background, so this is only visible for Auth flow
         AnimatedGradientBackground()
 
-        // ─── Navigation with crossfade (no slide = no gap) ─────────────
+        // ─── Navigation ───────────────────────────────────────────
         NavHost(
             navController = navController,
             startDestination = startDestination,
         ) {
-            // ─── Login Screen ───────────────────────────────────────
+            // ─── Login Screen ───────────────────────────────────
             composable(
                 route = Screen.Login.route,
                 enterTransition = {
@@ -65,13 +69,17 @@ fun NextStepZNavGraph(
                             launchSingleTop = true
                         }
                     },
-                    onLoginClick = { email, password ->
-                        // TODO: Integrate with ViewModel for actual login
+                    onLoginClick = { _, _ ->
+                        // Navigate to Main flow after successful login
+                        navController.navigate(Screen.Main.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
 
-            // ─── Register Screen ────────────────────────────────────
+            // ─── Register Screen ────────────────────────────────
             composable(
                 route = Screen.Register.route,
                 enterTransition = {
@@ -94,13 +102,13 @@ fun NextStepZNavGraph(
                             launchSingleTop = true
                         }
                     },
-                    onRegisterClick = { fullName, email, password ->
+                    onRegisterClick = { _, _, _ ->
                         // TODO: Integrate with ViewModel for actual registration
                     }
                 )
             }
 
-            // ─── Forgot Password Screen ─────────────────────────────
+            // ─── Forgot Password Screen ─────────────────────────
             composable(
                 route = Screen.ForgotPassword.route,
                 enterTransition = {
@@ -120,10 +128,29 @@ fun NextStepZNavGraph(
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    onSubmitClick = { email ->
+                    onSubmitClick = { _ ->
                         // TODO: Integrate with ViewModel for actual password reset
                     }
                 )
+            }
+
+            // ─── Main Screen (Home + Bottom Nav) ────────────────
+            composable(
+                route = Screen.Main.route,
+                enterTransition = {
+                    fadeIn(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
+                },
+                exitTransition = {
+                    fadeOut(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
+                },
+                popEnterTransition = {
+                    fadeIn(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
+                },
+                popExitTransition = {
+                    fadeOut(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
+                }
+            ) {
+                MainScreen()
             }
         }
     }

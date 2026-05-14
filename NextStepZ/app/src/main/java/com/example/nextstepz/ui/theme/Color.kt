@@ -46,3 +46,14 @@ val InputPlaceholder = Color(0xFF64748B)
 // ─── Social Login Colors ────────────────────────────────────────────────────
 val GoogleRed = Color(0xFFEA4335)
 val FacebookBlue = Color(0xFF1877F2)
+
+// ─── Navigation Bar Colors ──────────────────────────────────────────────────
+val NavBarBackground = Color(0xE6111827)        // DarkSurface 90% opacity
+val NavBarIndicator = Color(0x1A7C4DFF)         // Purple 10% — active bg
+val NavBarInactive = Color(0xFF64748B)          // Same as TextTertiary
+
+// ─── Home Screen Accents ────────────────────────────────────────────────────
+val AccentOrange = Color(0xFFFF6B35)            // Warm accent (from logo)
+val AccentCyan = Color(0xFF06B6D4)              // Cool accent
+val AccentEmerald = Color(0xFF10B981)           // Green accent
+val AccentAmber = Color(0xFFF59E0B)             // Amber accent
