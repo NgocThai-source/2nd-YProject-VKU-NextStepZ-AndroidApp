@@ -55,10 +55,6 @@ import com.example.nextstepz.ui.theme.InputPlaceholder
 import com.example.nextstepz.ui.theme.TextPrimary
 import com.example.nextstepz.ui.theme.TextSecondary
 
-/**
- * Login Screen — Premium dark themed with glassmorphism.
- * Background is rendered at NavGraph level for seamless transitions.
- */
 @Composable
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
