@@ -69,6 +69,7 @@ import com.example.nextstepz.ui.theme.TextSecondary
 fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToForgotPassword: () -> Unit = {},
+    onNavigateToHome: () -> Unit = {},
     viewModel: AuthViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -81,7 +82,7 @@ fun LoginScreen(
         if(authState is AuthState.Success){
             Toast.makeText(context, authState.message, Toast.LENGTH_LONG).show()
             viewModel.resetState()
-            // onNavigateToHome()
+             onNavigateToHome()
         }else if(authState is AuthState.Error) {
             Toast.makeText(context, authState.message, Toast.LENGTH_LONG).show()
             viewModel.resetState()

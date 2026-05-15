@@ -19,6 +19,7 @@ import com.example.nextstepz.ui.screens.auth.LoginScreen
 import com.example.nextstepz.ui.screens.auth.NewPasswordScreen
 import com.example.nextstepz.ui.screens.auth.OtpVerificationScreen
 import com.example.nextstepz.ui.screens.auth.RegisterScreen
+import com.example.nextstepz.ui.screens.main.MainScreen
 
 private const val TRANSITION_DURATION = 350
 
@@ -54,6 +55,7 @@ fun NextStepZNavGraph(
                     fadeIn(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
                 },
                 popExitTransition = {
+
                     fadeOut(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
                 }
             ) {
@@ -69,7 +71,12 @@ fun NextStepZNavGraph(
                             launchSingleTop = true
                         }
                     },
-
+                    onNavigateToHome = {
+                        navController.navigate(Screen.Main.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
 
@@ -96,7 +103,6 @@ fun NextStepZNavGraph(
                             launchSingleTop = true
                         }
                     }
-
                 )
             }
 
@@ -127,7 +133,6 @@ fun NextStepZNavGraph(
                     }
                 )
             }
-
             // ─── OTP Verification Screen ────────────────────────────
             composable(
                 route = Screen.OtpVerification.route,
@@ -171,7 +176,6 @@ fun NextStepZNavGraph(
                     }
                 )
             }
-
             // ─── New Password Screen ────────────────────────────────
             composable(
                 route = Screen.NewPassword.route,
@@ -207,6 +211,17 @@ fun NextStepZNavGraph(
                         navController.popBackStack()
                     }
                 )
+            }
+            composable(
+                route = Screen.Main.route,
+                enterTransition = {
+                    fadeIn(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
+                },
+                exitTransition = {
+                    fadeOut(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
+                }
+            ){
+                MainScreen()
             }
         }
     }
