@@ -5,27 +5,20 @@ interface BaseResponse {
     val message: String
 }
 
-data class RegisterResponse (
+data class RegisterResponse(
     override val success: Boolean,
     override val message: String,
     val userData: UserData?
-): BaseResponse
+) : BaseResponse
 
-data class LoginResponse (
+data class LoginResponse(
     override val success: Boolean,
     override val message: String,
     val token: String? = null,
     val userData: UserData? = null
-): BaseResponse
+) : BaseResponse
 
-data class ForgotPasswordResponse (
+data class ForgotPasswordResponse(
     override val success: Boolean,
     override val message: String,
-): BaseResponse
-
-
-data class UserData (
-    val userId: String,
-    val name: String,
-    val email: String,
-)
+) : BaseResponse
