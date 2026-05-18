@@ -36,6 +36,8 @@ sealed class Screen(val route: String) {
     data object Articles : Screen("articles")
     data object Messages : Screen("messages")
     data object Account : Screen("account")
+
+    data object ChatSandbox : Screen("chat_sandbox")
 }
 /**
  * Represents a bottom navigation tab item.

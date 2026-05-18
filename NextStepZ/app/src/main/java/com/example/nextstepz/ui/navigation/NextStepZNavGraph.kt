@@ -19,6 +19,8 @@ import com.example.nextstepz.ui.screens.auth.LoginScreen
 import com.example.nextstepz.ui.screens.auth.NewPasswordScreen
 import com.example.nextstepz.ui.screens.auth.OtpVerificationScreen
 import com.example.nextstepz.ui.screens.auth.RegisterScreen
+import com.example.nextstepz.ui.screens.chat.ChatSandboxScreen
+import com.example.nextstepz.ui.screens.chat.ChatViewModel
 import com.example.nextstepz.ui.screens.main.MainScreen
 
 private const val TRANSITION_DURATION = 350
@@ -72,7 +74,7 @@ fun NextStepZNavGraph(
                         }
                     },
                     onNavigateToHome = {
-                        navController.navigate(Screen.Main.route) {
+                        navController.navigate(Screen.ChatSandbox.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                             launchSingleTop = true
                         }
@@ -222,6 +224,33 @@ fun NextStepZNavGraph(
                 }
             ){
                 MainScreen()
+            }
+            // ─── Màn hình Test Chat Realtime ────────────────────────
+            composable(
+                route = Screen.ChatSandbox.route,
+                enterTransition = {
+                    fadeIn(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
+                },
+                exitTransition = {
+                    fadeOut(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
+                }
+            ) {
+                // Khởi tạo ViewModel (sử dụng viewModels() hoặc koin/hilt tùy project của bạn)
+                val chatViewModel: ChatViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+
+                // TODO: Chỗ này bạn cần lấy ID của user đang đăng nhập hiện tại từ Supabase Auth.
+                // Ví dụ tạm thời gán cứng để bạn hình dung, khi chạy thật hãy thay bằng ID lấy từ Auth nhé:
+//                val currentUserId = "9b38990b-15d5-414c-ad85-a746e53f4bf6" //Nguyen
+                val currentUserId = "9255374e-1e6d-4e9b-b4ec-5b11b2652605" // Thai
+
+                // Dán cứng ID phòng chat bạn vừa tạo bằng tay trên bảng conversations ở Supabase
+                val testConversationId = "6d239a28-a46b-4aca-801c-03d6fa573e84"
+
+                ChatSandboxScreen(
+                    viewModel = chatViewModel,
+                    currentUserId = currentUserId,
+                    conversationId = testConversationId
+                )
             }
         }
     }

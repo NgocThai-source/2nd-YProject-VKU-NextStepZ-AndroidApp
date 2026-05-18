@@ -61,4 +61,9 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // Thư viện Socket.IO Client cho Android
+    implementation("io.socket:socket.io-client:2.1.0")
+
+    // Thư viện Gson để hỗ trợ parse JSON (rất cần khi gửi/nhận data với backend)
+    implementation("com.google.code.gson:gson:2.10.1")
 }
