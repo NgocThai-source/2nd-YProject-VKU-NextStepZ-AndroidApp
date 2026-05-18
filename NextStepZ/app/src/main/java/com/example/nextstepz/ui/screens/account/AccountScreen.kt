@@ -45,6 +45,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.nextstepz.auth.data.local.TokenManager
+import com.example.nextstepz.auth.data.model.EmployerProfileUi
+import com.example.nextstepz.auth.data.model.StudentProfileUi
 import com.example.nextstepz.auth.data.model.UserRole
 import com.example.nextstepz.ui.components.AnimatedGradientBackground
 import com.example.nextstepz.ui.components.GlassCard
@@ -120,8 +122,11 @@ fun AccountScreen(
         composable(AccountNavRoutes.REGISTER_STUDENT) {
             RegisterStudentScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onSuccess = {
-                    viewModel.updateAfterRegistration(UserRole.STUDENT)
+                onSuccess = { profile ->
+                    viewModel.updateAfterStudentRegistration(
+                        profile = profile,
+                        tokenManager = tokenManager
+                    )
                     navController.popBackStack()
                 }
             )
@@ -130,8 +135,11 @@ fun AccountScreen(
         composable(AccountNavRoutes.REGISTER_EMPLOYER) {
             RegisterEmployerScreen(
                 onNavigateBack = { navController.popBackStack() },
-                onSuccess = {
-                    viewModel.updateAfterRegistration(UserRole.EMPLOYER)
+                onSuccess = { profile ->
+                    viewModel.updateAfterEmployerRegistration(
+                        profile = profile,
+                        tokenManager = tokenManager
+                    )
                     navController.popBackStack()
                 }
             )
@@ -202,6 +210,26 @@ private fun AccountMainContent(
                 roleDisplayName = viewModel.userRole.displayName,
                 isVerified = viewModel.isVerified
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            when (viewModel.userRole) {
+                UserRole.STUDENT -> {
+                    viewModel.studentProfile?.let { profile ->
+                        StudentInfoCard(profile = profile)
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+
+                UserRole.EMPLOYER -> {
+                    viewModel.employerProfile?.let { profile ->
+                        EmployerInfoCard(profile = profile)
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+
+                UserRole.GUEST -> Unit
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -292,6 +320,82 @@ private fun AccountMainContent(
                 textContentColor = TextSecondary
             )
         }
+    }
+}
+
+@Composable
+private fun StudentInfoCard(profile: StudentProfileUi) {
+    GlassCard {
+        Column {
+            Text(
+                text = "Thông tin sinh viên",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = TextPrimary
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            InfoRow(label = "Họ tên", value = profile.fullName)
+            InfoRow(label = "Ngày sinh", value = profile.dob)
+            InfoRow(label = "Email", value = profile.email)
+            InfoRow(label = "Số điện thoại", value = profile.phone)
+            InfoRow(label = "Tỉnh / Thành phố", value = profile.provinceName)
+            InfoRow(label = "Trường", value = profile.universityName)
+            InfoRow(label = "Chuyên ngành", value = profile.major)
+            InfoRow(label = "Năm tốt nghiệp", value = profile.graduationYear)
+            InfoRow(label = "GPA", value = profile.gpa)
+        }
+    }
+}
+
+@Composable
+private fun EmployerInfoCard(profile: EmployerProfileUi) {
+    GlassCard {
+        Column {
+            Text(
+                text = "Thông tin nhà tuyển dụng",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = TextPrimary
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            InfoRow(label = "Tên công ty", value = profile.companyName)
+            InfoRow(label = "Địa chỉ", value = profile.companyAddress)
+            InfoRow(label = "Người tuyển dụng", value = profile.employerName)
+            InfoRow(label = "Email", value = profile.email)
+            InfoRow(label = "Số điện thoại", value = profile.phone)
+            InfoRow(label = "Mã số thuế", value = profile.taxCode)
+            InfoRow(label = "Lĩnh vực", value = profile.industry)
+        }
+    }
+}
+
+@Composable
+private fun InfoRow(
+    label: String,
+    value: String
+) {
+    if (value.isBlank()) return
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Text(
+            text = "$label:",
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+            color = TextSecondary,
+            modifier = Modifier.weight(0.42f)
+        )
+
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextPrimary,
+            modifier = Modifier.weight(0.58f)
+        )
     }
 }
 

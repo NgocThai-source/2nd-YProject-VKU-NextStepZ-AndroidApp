@@ -174,14 +174,14 @@ fun PrivacyScreen(
 
 @Composable
 private fun EmailTab(
-    viewModel: PrivacyViewModel,
+    viewModel: PrivacyViewModel = viewModel(),
     tokenManager: TokenManager,
-    profileState: com.example.nextstepz.ui.screens.auth.ProfileState
+    profileState: ProfileState
 ) {
     var showSuccess by remember { mutableStateOf(false) }
 
     LaunchedEffect(profileState) {
-        if (profileState is com.example.nextstepz.ui.screens.auth.ProfileState.Success && showSuccess) {
+        if (profileState is ProfileState.Success && showSuccess) {
             showSuccess = true
         }
     }
@@ -252,14 +252,14 @@ private fun EmailTab(
                     val userId = tokenManager.userId ?: ""
                     viewModel.submitEmailUpdate(userId)
                 },
-                isLoading = profileState is com.example.nextstepz.ui.screens.auth.ProfileState.Loading,
-                enabled = profileState !is com.example.nextstepz.ui.screens.auth.ProfileState.Loading
+                isLoading = profileState is ProfileState.Loading,
+                enabled = profileState !is ProfileState.Loading
             )
 
-            if (profileState is com.example.nextstepz.ui.screens.auth.ProfileState.Error) {
+            if (profileState is ProfileState.Error) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = (profileState as com.example.nextstepz.ui.screens.auth.ProfileState.Error).message,
+                    text = (profileState as ProfileState.Error).message,
                     style = MaterialTheme.typography.bodySmall,
                     color = ErrorRed,
                     textAlign = TextAlign.Center,
@@ -274,7 +274,7 @@ private fun EmailTab(
 private fun PasswordTab(
     viewModel: PrivacyViewModel,
     tokenManager: TokenManager,
-    profileState: com.example.nextstepz.ui.screens.auth.ProfileState,
+    profileState: ProfileState,
     passwordVisible: Boolean,
     newPasswordVisible: Boolean,
     confirmPasswordVisible: Boolean,
@@ -379,14 +379,14 @@ private fun PasswordTab(
                     val userId = tokenManager.userId ?: ""
                     viewModel.submitPasswordUpdate(userId)
                 },
-                isLoading = profileState is com.example.nextstepz.ui.screens.auth.ProfileState.Loading,
-                enabled = profileState !is com.example.nextstepz.ui.screens.auth.ProfileState.Loading
+                isLoading = profileState is ProfileState.Loading,
+                enabled = profileState !is ProfileState.Loading
             )
 
-            if (profileState is com.example.nextstepz.ui.screens.auth.ProfileState.Error) {
+            if (profileState is ProfileState.Error) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = (profileState as com.example.nextstepz.ui.screens.auth.ProfileState.Error).message,
+                    text = (profileState as ProfileState.Error).message,
                     style = MaterialTheme.typography.bodySmall,
                     color = ErrorRed,
                     textAlign = TextAlign.Center,

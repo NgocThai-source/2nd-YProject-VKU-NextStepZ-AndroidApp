@@ -7,13 +7,21 @@ data class UserData(
     val phone: String? = null,
     val role: String? = null,
     val avatar: String? = null,
-    val university: String? = null,
+
+    val provinceCode: Int? = null,
+    val provinceName: String? = null,
+
+    val universityId: Int? = null,
+    val universityName: String? = null,
+
     val major: String? = null,
     val graduationYear: Int? = null,
     val gpa: Double? = null,
+
     val companyName: String? = null,
     val taxCode: String? = null,
     val field: String? = null,
+
     val isVerified: Boolean = false
 )
 

@@ -47,7 +47,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -55,19 +54,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextstepz.auth.data.local.TokenManager
+import com.example.nextstepz.auth.data.model.EmployerProfileUi
 import com.example.nextstepz.ui.components.GlassCard
 import com.example.nextstepz.ui.components.GradientButton
 import com.example.nextstepz.ui.components.NextStepZTextField
 import com.example.nextstepz.ui.components.TermsContent
 import com.example.nextstepz.ui.components.TermsDialog
-import com.example.nextstepz.ui.screens.auth.ProfileState
 import com.example.nextstepz.ui.theme.DarkBackground
 import com.example.nextstepz.ui.theme.DarkSurface
 import com.example.nextstepz.ui.theme.ErrorRed
 import com.example.nextstepz.ui.theme.GradientStart
 import com.example.nextstepz.ui.theme.InfoBlue
 import com.example.nextstepz.ui.theme.InputBackground
-import com.example.nextstepz.ui.theme.InputBorder
 import com.example.nextstepz.ui.theme.InputPlaceholder
 import com.example.nextstepz.ui.theme.TextPrimary
 import com.example.nextstepz.ui.theme.TextSecondary
@@ -75,7 +73,7 @@ import com.example.nextstepz.ui.theme.TextSecondary
 @Composable
 fun RegisterEmployerScreen(
     onNavigateBack: () -> Unit,
-    onSuccess: () -> Unit,
+    onSuccess: (EmployerProfileUi) -> Unit,
     viewModel: RegisterEmployerViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -113,7 +111,7 @@ fun RegisterEmployerScreen(
                 TextButton(
                     onClick = {
                         showSuccessDialog = false
-                        onSuccess()
+                        onSuccess(viewModel.buildEmployerProfileUi())
                     }
                 ) {
                     Text("Đóng", color = InfoBlue, fontWeight = FontWeight.SemiBold)
@@ -227,7 +225,7 @@ fun RegisterEmployerScreen(
 
                 FieldDropdown(
                     selectedField = viewModel.field,
-                    fields = viewModel.getBusinessFields(),
+                    fields = viewModel.getIndustryFields(),
                     onFieldSelected = viewModel::updateField,
                     isError = viewModel.fieldError != null,
                     errorMessage = viewModel.fieldError
@@ -259,13 +257,13 @@ fun RegisterEmployerScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 NextStepZTextField(
-                    value = viewModel.recruiterName,
-                    onValueChange = viewModel::updateRecruiterName,
+                    value = viewModel.employerName,
+                    onValueChange = viewModel::updateEmployerName,
                     label = "Tên người tuyển dụng",
                     placeholder = "Nguyễn Văn B",
                     leadingIcon = Icons.Outlined.Person,
-                    isError = viewModel.recruiterNameError != null,
-                    errorMessage = viewModel.recruiterNameError
+                    isError = viewModel.employerNameError != null,
+                    errorMessage = viewModel.employerNameError
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))

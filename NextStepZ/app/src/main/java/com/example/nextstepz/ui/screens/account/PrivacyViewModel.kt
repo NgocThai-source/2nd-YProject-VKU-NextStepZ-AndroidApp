@@ -8,11 +8,11 @@ import androidx.lifecycle.viewModelScope
 import com.example.nextstepz.auth.data.model.UpdateEmailRequest
 import com.example.nextstepz.auth.data.model.UpdatePasswordRequest
 import com.example.nextstepz.auth.data.repository.AuthRepository
-import com.example.nextstepz.ui.screens.auth.ProfileState
+import com.example.nextstepz.auth.data.repository.ProfileRepository
 import kotlinx.coroutines.launch
 
 class PrivacyViewModel : ViewModel() {
-    private val authRepository = AuthRepository()
+    private val profileRepository = ProfileRepository()
     var profileState by mutableStateOf<ProfileState>(ProfileState.Idle)
         private set
 
@@ -85,7 +85,7 @@ class PrivacyViewModel : ViewModel() {
         viewModelScope.launch {
             profileState = ProfileState.Loading
             try {
-                val response = authRepository.updateEmail(UpdateEmailRequest(userId, newEmail))
+                val response = profileRepository.updateEmail(UpdateEmailRequest(userId, newEmail))
                 if (response.success) {
                     currentEmail = newEmail
                     newEmail = ""
@@ -133,7 +133,7 @@ class PrivacyViewModel : ViewModel() {
         viewModelScope.launch {
             profileState = ProfileState.Loading
             try {
-                val response = authRepository.updatePassword(
+                val response = profileRepository.updatePassword(
                     UpdatePasswordRequest(userId, currentPassword, newPassword)
                 )
                 if (response.success) {

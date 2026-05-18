@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextstepz.auth.data.local.TokenManager
+import com.example.nextstepz.auth.data.model.StudentProfileUi
 import com.example.nextstepz.ui.components.CityDropdown
 import com.example.nextstepz.ui.components.GlassCard
 import com.example.nextstepz.ui.components.GradientButton
@@ -63,9 +64,7 @@ import com.example.nextstepz.ui.components.NextStepZTextField
 import com.example.nextstepz.ui.components.TermsContent
 import com.example.nextstepz.ui.components.TermsDialog
 import com.example.nextstepz.ui.components.UniversityDropdown
-import com.example.nextstepz.ui.components.VietnamUniversities
 import com.example.nextstepz.ui.components.YearDropdown
-import com.example.nextstepz.ui.screens.auth.ProfileState
 import com.example.nextstepz.ui.theme.DarkBackground
 import com.example.nextstepz.ui.theme.DarkSurface
 import com.example.nextstepz.ui.theme.ErrorRed
@@ -85,7 +84,7 @@ import java.util.Locale
 @Composable
 fun RegisterStudentScreen(
     onNavigateBack: () -> Unit,
-    onSuccess: () -> Unit,
+    onSuccess: (StudentProfileUi) -> Unit,
     viewModel: RegisterStudentViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -95,7 +94,6 @@ fun RegisterStudentScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var showTermsDialog by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
-    var universities by remember { mutableStateOf(emptyList<String>()) }
 
     val profileState = viewModel.profileState
 
@@ -103,6 +101,10 @@ fun RegisterStudentScreen(
         if (profileState is ProfileState.Success) {
             showSuccessDialog = true
         }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadProvinces()
     }
 
     val datePickerState = rememberDatePickerState()
@@ -152,7 +154,7 @@ fun RegisterStudentScreen(
                 TextButton(
                     onClick = {
                         showSuccessDialog = false
-                        onSuccess()
+                        onSuccess(viewModel.buildStudentProfileUi())
                     }
                 ) {
                     Text("Đóng", color = SuccessGreen, fontWeight = FontWeight.SemiBold)
@@ -244,10 +246,11 @@ fun RegisterStudentScreen(
 
                     NextStepZTextField(
                         value = viewModel.dateOfBirth,
-                        onValueChange = { },
+                        onValueChange =  viewModel::updateDateOfBirth,
                         label = "Ngày tháng năm sinh",
                         placeholder = "DD/MM/YYYY",
                         leadingIcon = Icons.Outlined.CalendarToday,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         isError = viewModel.dateOfBirthError != null,
                         errorMessage = viewModel.dateOfBirthError,
                         modifier = Modifier.clickable { showDatePicker = true }
@@ -293,11 +296,9 @@ fun RegisterStudentScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     CityDropdown(
-                        selectedProvince = viewModel.province,
-                        onProvinceSelected = {
-                            viewModel.updateProvince(it)
-                            universities = VietnamUniversities.getUniversitiesByProvince(it)
-                        },
+                        selectedProvince = viewModel.selectedProvince,
+                        provinces = viewModel.provinces,
+                        onProvinceSelected = viewModel::updateProvince,
                         isError = viewModel.provinceError != null,
                         errorMessage = viewModel.provinceError
                     )
@@ -305,8 +306,8 @@ fun RegisterStudentScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     UniversityDropdown(
-                        selectedUniversity = viewModel.university,
-                        universities = universities,
+                        selectedUniversity = viewModel.selectedUniversity,
+                        universities = viewModel.universities,
                         onUniversitySelected = viewModel::updateUniversity,
                         isError = viewModel.universityError != null,
                         errorMessage = viewModel.universityError

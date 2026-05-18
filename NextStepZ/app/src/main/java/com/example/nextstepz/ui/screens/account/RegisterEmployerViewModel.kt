@@ -1,18 +1,20 @@
 package com.example.nextstepz.ui.screens.account
-
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.nextstepz.auth.data.model.EmployerRegistrationRequest
-import com.example.nextstepz.auth.data.repository.AuthRepository
-import com.example.nextstepz.ui.screens.auth.ProfileState
-import kotlinx.coroutines.CoroutineScope
+import com.example.nextstepz.auth.data.model.BaseResponse
+import com.example.nextstepz.auth.data.model.CompleteProfileRequest
+import com.example.nextstepz.auth.data.model.EmployerProfileUi
+import com.example.nextstepz.auth.data.model.UserRole
+import com.example.nextstepz.auth.data.repository.ProfileRepository
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import retrofit2.HttpException
 
 class RegisterEmployerViewModel : ViewModel() {
-    private val authRepository = AuthRepository()
+    private val profileRepository = ProfileRepository()
     var profileState by mutableStateOf<ProfileState>(ProfileState.Idle)
         private set
 
@@ -20,7 +22,7 @@ class RegisterEmployerViewModel : ViewModel() {
         private set
     var companyAddress by mutableStateOf("")
         private set
-    var recruiterName by mutableStateOf("")
+    var employerName by mutableStateOf("")
         private set
     var phone by mutableStateOf("")
         private set
@@ -39,7 +41,7 @@ class RegisterEmployerViewModel : ViewModel() {
         private set
     var companyAddressError by mutableStateOf<String?>(null)
         private set
-    var recruiterNameError by mutableStateOf<String?>(null)
+    var employerNameError by mutableStateOf<String?>(null)
         private set
     var phoneError by mutableStateOf<String?>(null)
         private set
@@ -53,7 +55,7 @@ class RegisterEmployerViewModel : ViewModel() {
     var showPendingDialog by mutableStateOf(false)
         private set
 
-    private val businessFields = listOf(
+    private val industryOptions = listOf(
         "Công nghệ thông tin",
         "Tài chính - Ngân hàng",
         "Kinh doanh - Marketing",
@@ -71,17 +73,43 @@ class RegisterEmployerViewModel : ViewModel() {
         "Khác"
     )
 
-    fun getBusinessFields() = businessFields
+    fun getIndustryFields() = industryOptions
 
-    fun updateCompanyName(value: String) { companyName = value; companyNameError = null }
-    fun updateCompanyAddress(value: String) { companyAddress = value; companyAddressError = null }
-    fun updateRecruiterName(value: String) { recruiterName = value; recruiterNameError = null }
-    fun updatePhone(value: String) { phone = value; phoneError = null }
-    fun updateEmail(value: String) { email = value; emailError = null }
-    fun updateTaxCode(value: String) { taxCode = value; taxCodeError = null }
-    fun updateField(value: String) { field = value; fieldError = null; if (value != "Khác") customField = "" }
-    fun updateCustomField(value: String) { customField = value }
-    fun updateTermsAccepted(value: Boolean) { termsAccepted = value }
+    fun updateCompanyName(value: String) {
+        companyName = value; companyNameError = null
+    }
+
+    fun updateCompanyAddress(value: String) {
+        companyAddress = value; companyAddressError = null
+    }
+
+    fun updateEmployerName(value: String) {
+        employerName = value; employerNameError = null
+    }
+
+    fun updatePhone(value: String) {
+        phone = value; phoneError = null
+    }
+
+    fun updateEmail(value: String) {
+        email = value; emailError = null
+    }
+
+    fun updateTaxCode(value: String) {
+        taxCode = value; taxCodeError = null
+    }
+
+    fun updateField(value: String) {
+        field = value; fieldError = null; if (value != "Khác") customField = ""
+    }
+
+    fun updateCustomField(value: String) {
+        customField = value
+    }
+
+    fun updateTermsAccepted(value: Boolean) {
+        termsAccepted = value
+    }
 
     private fun isValidEmail(email: String): Boolean {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
@@ -98,7 +126,39 @@ class RegisterEmployerViewModel : ViewModel() {
         return clean.length in 10..13 && clean.all { it.isDigit() }
     }
 
-    fun submit(userId: String) {
+    private fun <T : BaseResponse> executeProfileAction(
+        onSuccess: () -> Unit = {},
+        apiCall: suspend () -> T
+    ) {
+        viewModelScope.launch {
+            profileState = ProfileState.Loading
+
+            try {
+                val response = apiCall()
+
+                if (response.success) {
+                    profileState = ProfileState.Success(response.message)
+                    onSuccess()
+                } else {
+                    profileState = ProfileState.Error(response.message)
+                }
+            } catch (e: HttpException) {
+                val errorBodyString = e.response()?.errorBody()?.string()
+
+                val messageFromServer = try {
+                    JSONObject(errorBodyString ?: "").getString("message")
+                } catch (jsonException: Exception) {
+                    "Lỗi định dạng dữ liệu từ Server"
+                }
+
+                profileState = ProfileState.Error(messageFromServer)
+            } catch (e: Exception) {
+                profileState = ProfileState.Error("Đã xảy ra lỗi kết nối: ${e.message}")
+            }
+        }
+    }
+
+    private fun validateForm(): Boolean {
         var hasError = false
 
         if (companyName.isBlank()) {
@@ -111,8 +171,8 @@ class RegisterEmployerViewModel : ViewModel() {
             hasError = true
         }
 
-        if (recruiterName.isBlank()) {
-            recruiterNameError = "Tên người tuyển dụng không được để trống"
+        if (employerName.isBlank()) {
+            employerNameError = "Tên người tuyển dụng không được để trống"
             hasError = true
         }
 
@@ -149,40 +209,44 @@ class RegisterEmployerViewModel : ViewModel() {
         }
 
         if (!termsAccepted) {
+            profileState = ProfileState.Error("Bạn cần chấp nhận nội quy để tiếp tục")
             hasError = true
         }
 
-        if (hasError) return
-
-        val request = EmployerRegistrationRequest(
-            userId = userId,
+        return !hasError
+    }
+    fun buildEmployerProfileUi(): EmployerProfileUi {
+        return EmployerProfileUi(
             companyName = companyName,
             companyAddress = companyAddress,
-            recruiterName = recruiterName,
+            employerName = employerName,
             phone = phone,
             email = email,
             taxCode = taxCode,
-            field = if (field == "Khác") customField else field
+            industry = if (field == "Khác") customField else field
+        )
+    }
+    fun submit(userId: String) {
+        if (userId.isBlank()) {
+            profileState = ProfileState.Error("Không tìm thấy thông tin người dùng")
+            return
+        }
+        if (!validateForm()) return
+        val request = CompleteProfileRequest(
+            role = UserRole.EMPLOYER.value,
+
+            company_name = companyName,
+            tax_code = taxCode,
+            company_address = companyAddress,
+            employer_name = employerName,
+            industry = if (field == "Khác") customField else field,
+
+            contact_phone = phone,
+            contact_email = email
         )
 
-        viewModelScope.launch {
-            profileState = ProfileState.Loading
-            try {
-                val response = authRepository.registerEmployer(request)
-                if (response.success) {
-                    profileState = ProfileState.Success(response.message)
-                    showPendingDialog = true
-                } else {
-                    profileState = ProfileState.Error(response.message)
-                }
-            } catch (e: Exception) {
-                profileState = ProfileState.Error("Đã xảy ra lỗi: ${e.message}")
-            }
+        executeProfileAction(onSuccess = {showPendingDialog = true}) {
+            profileRepository.completeProfile(userId, request)
         }
-    }
-
-    fun resetState() {
-        profileState = ProfileState.Idle
-        showPendingDialog = false
     }
 }
