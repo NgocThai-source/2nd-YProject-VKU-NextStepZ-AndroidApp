@@ -20,7 +20,6 @@ data class LoginResponse(
     override val success: Boolean,
     override val message: String,
     val token: String? = null,
-    val userId: String? = null,
     val userData: UserData? = null
 ) : BaseResponse
 

@@ -250,7 +250,7 @@ private fun EmailTab(
                 text = "Cập nhật Email",
                 onClick = {
                     val userId = tokenManager.userId ?: ""
-                    viewModel.submitEmailUpdate(userId)
+                    viewModel.submitEmailUpdate(userId, tokenManager)
                 },
                 isLoading = profileState is ProfileState.Loading,
                 enabled = profileState !is ProfileState.Loading

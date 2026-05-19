@@ -21,11 +21,6 @@ data class ResetPasswordRequest (
     val newPassword: String,
 )
 
-data class RegisterRoleRequest(
-    val userId: String,
-    val role: String,
-)
-
 data class CompleteProfileRequest(
     val role: String,
 

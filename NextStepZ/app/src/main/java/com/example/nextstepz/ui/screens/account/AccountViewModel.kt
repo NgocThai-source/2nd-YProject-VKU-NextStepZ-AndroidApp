@@ -14,6 +14,7 @@ class AccountViewModel : ViewModel() {
     var userName by mutableStateOf("")
         private set
 
+    // Đây là email đăng ký tài khoản
     var userEmail by mutableStateOf("")
         private set
 
@@ -36,11 +37,49 @@ class AccountViewModel : ViewModel() {
         private set
 
     fun loadUserData(tokenManager: TokenManager) {
-        userName = tokenManager.userName ?: ""
+        userName = tokenManager.userName ?: "Người dùng"
+
+        // Luôn lấy email đăng ký tài khoản
         userEmail = tokenManager.userEmail ?: ""
+
         userPhone = tokenManager.userPhone ?: ""
         userRole = UserRole.fromValue(tokenManager.userRole)
         isVerified = tokenManager.isVerified
+
+        studentProfile = null
+        employerProfile = null
+
+        if (userRole == UserRole.STUDENT) {
+            studentProfile = StudentProfileUi(
+                fullName = tokenManager.studentFullName ?: userName,
+                dob = tokenManager.studentDob ?: "",
+
+                // Email liên hệ trong card thông tin
+                email = tokenManager.contactEmail ?: "",
+
+                phone = tokenManager.userPhone ?: "",
+                provinceName = tokenManager.provinceName ?: "",
+                universityName = tokenManager.universityName ?: "",
+                major = tokenManager.major ?: "",
+                graduationYear = tokenManager.graduationYear ?: "",
+                gpa = tokenManager.gpa ?: ""
+            )
+        }
+
+        if (userRole == UserRole.EMPLOYER) {
+            employerProfile = EmployerProfileUi(
+                companyName = tokenManager.companyName ?: "",
+                companyAddress = tokenManager.companyAddress ?: "",
+                employerName = tokenManager.employerName ?: userName,
+                phone = tokenManager.userPhone ?: "",
+
+                // Email liên hệ trong card thông tin
+                email = tokenManager.contactEmail ?: "",
+
+                taxCode = tokenManager.taxCode ?: "",
+                industry = tokenManager.industry ?: ""
+            )
+        }
     }
 
     fun updateAfterStudentRegistration(
@@ -52,15 +91,13 @@ class AccountViewModel : ViewModel() {
         employerProfile = null
 
         userName = profile.fullName
-        userEmail = profile.email
         userPhone = profile.phone
 
-        tokenManager.userRole = UserRole.STUDENT.value
-        tokenManager.userName = profile.fullName
-        tokenManager.userEmail = profile.email
-        tokenManager.userPhone = profile.phone
-        tokenManager.university = profile.universityName
-        tokenManager.major = profile.major
+        // KHÔNG set userEmail = profile.email
+        // Vì profile.email là email liên hệ, không phải email đăng ký tài khoản
+        userEmail = tokenManager.userEmail ?: ""
+
+        tokenManager.saveStudentProfile(profile)
     }
 
     fun updateAfterEmployerRegistration(
@@ -72,13 +109,12 @@ class AccountViewModel : ViewModel() {
         studentProfile = null
 
         userName = profile.employerName
-        userEmail = profile.email
         userPhone = profile.phone
 
-        tokenManager.userRole = UserRole.EMPLOYER.value
-        tokenManager.userName = profile.employerName
-        tokenManager.userEmail = profile.email
-        tokenManager.userPhone = profile.phone
+        // KHÔNG set userEmail = profile.email
+        userEmail = tokenManager.userEmail ?: ""
+
+        tokenManager.saveEmployerProfile(profile)
     }
 
     fun openLogoutDialog() {

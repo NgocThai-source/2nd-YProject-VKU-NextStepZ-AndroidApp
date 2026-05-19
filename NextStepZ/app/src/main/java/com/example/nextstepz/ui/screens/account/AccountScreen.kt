@@ -147,7 +147,8 @@ fun AccountScreen(
 
         composable(AccountNavRoutes.PRIVACY) {
             PrivacyScreen(
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { viewModel.loadUserData(tokenManager)
+                                    navController.popBackStack() }
             )
         }
 

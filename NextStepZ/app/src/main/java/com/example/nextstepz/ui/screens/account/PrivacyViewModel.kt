@@ -5,9 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.nextstepz.auth.data.local.TokenManager
 import com.example.nextstepz.auth.data.model.UpdateEmailRequest
 import com.example.nextstepz.auth.data.model.UpdatePasswordRequest
-import com.example.nextstepz.auth.data.repository.AuthRepository
 import com.example.nextstepz.auth.data.repository.ProfileRepository
 import kotlinx.coroutines.launch
 
@@ -58,7 +58,7 @@ class PrivacyViewModel : ViewModel() {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
-    fun submitEmailUpdate(userId: String) {
+    fun submitEmailUpdate(userId: String, tokenManager: TokenManager) {
         var hasError = false
 
         if (newEmail.isBlank()) {
@@ -87,6 +87,7 @@ class PrivacyViewModel : ViewModel() {
             try {
                 val response = profileRepository.updateEmail(UpdateEmailRequest(userId, newEmail))
                 if (response.success) {
+                    tokenManager.userEmail = newEmail
                     currentEmail = newEmail
                     newEmail = ""
                     confirmEmail = ""

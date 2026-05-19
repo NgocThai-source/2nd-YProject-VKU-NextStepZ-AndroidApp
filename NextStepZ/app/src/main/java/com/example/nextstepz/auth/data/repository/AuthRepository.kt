@@ -9,8 +9,6 @@ import com.example.nextstepz.auth.data.model.ProvinceListResponse
 import com.example.nextstepz.auth.data.model.RegisterRequest
 import com.example.nextstepz.auth.data.model.RegisterResponse
 import com.example.nextstepz.auth.data.model.ResetPasswordRequest
-import com.example.nextstepz.auth.data.model.UpdateEmailRequest
-import com.example.nextstepz.auth.data.model.UpdatePasswordRequest
 import com.example.nextstepz.auth.data.model.VerifyOtpRequest
 import com.example.nextstepz.auth.data.remote.RetrofitClient
 

@@ -8,21 +8,9 @@ data class UserData(
     val role: String? = null,
     val avatar: String? = null,
 
-    val provinceCode: Int? = null,
-    val provinceName: String? = null,
-
-    val universityId: Int? = null,
-    val universityName: String? = null,
-
-    val major: String? = null,
-    val graduationYear: Int? = null,
-    val gpa: Double? = null,
-
-    val companyName: String? = null,
-    val taxCode: String? = null,
-    val field: String? = null,
-
-    val isVerified: Boolean = false
+    val isVerified: Boolean = false,
+    val studentProfile: StudentProfileUi? = null,
+    val employerProfile: EmployerProfileUi? = null,
 )
 
 enum class UserRole(val value: String, val displayName: String) {

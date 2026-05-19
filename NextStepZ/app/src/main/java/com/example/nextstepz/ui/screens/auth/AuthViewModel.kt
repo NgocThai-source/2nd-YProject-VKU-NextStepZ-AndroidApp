@@ -11,6 +11,7 @@ import com.example.nextstepz.auth.data.model.ForgotPasswordRequest
 import com.example.nextstepz.auth.data.model.LoginRequest
 import com.example.nextstepz.auth.data.model.RegisterRequest
 import com.example.nextstepz.auth.data.model.ResetPasswordRequest
+import com.example.nextstepz.auth.data.model.UserData
 import com.example.nextstepz.auth.data.model.VerifyOtpRequest
 import com.example.nextstepz.auth.data.repository.AuthRepository
 import kotlinx.coroutines.launch
@@ -23,6 +24,8 @@ class AuthViewModel : ViewModel() {
     var authState by mutableStateOf<AuthState>(AuthState.Idle)
         private set
 
+    var currentUserData by mutableStateOf<UserData?>(null)
+        private set
     private fun <T : BaseResponse> executeAuthAction(
         onSuccess: (T) -> Unit = {},
         apiCall: suspend () -> T
@@ -61,13 +64,17 @@ class AuthViewModel : ViewModel() {
         tokenManager: TokenManager
     ) = executeAuthAction(
         onSuccess = { response ->
-            tokenManager.userId = response.userData?.userId
-            tokenManager.userName = response.userData?.name
-            tokenManager.userEmail = response.userData?.email
-            tokenManager.userPhone = response.userData?.phone
-            tokenManager.userRole = response.userData?.role
-            tokenManager.userAvatar = response.userData?.avatar
-            tokenManager.isVerified = response.userData?.isVerified ?: false
+            val user = response.userData
+
+            currentUserData = user
+
+            tokenManager.userId = user?.userId
+            tokenManager.userName = user?.name
+            tokenManager.userEmail = user?.email
+            tokenManager.userPhone = user?.phone
+            tokenManager.userRole = user?.role
+            tokenManager.userAvatar = user?.avatar
+            tokenManager.isVerified = user?.isVerified ?: false
         }
     ) {
         authRepository.register(request)
@@ -78,14 +85,36 @@ class AuthViewModel : ViewModel() {
         tokenManager: TokenManager
     ) = executeAuthAction(
         onSuccess = { response ->
+            val user = response.userData
+
+            currentUserData = user
+
+            // Thông tin tài khoản đăng nhập
             tokenManager.token = response.token
-            tokenManager.userId = response.userId ?: response.userData?.userId
-            tokenManager.userName = response.userData?.name
-            tokenManager.userEmail = response.userData?.email
-            tokenManager.userPhone = response.userData?.phone
-            tokenManager.userRole = response.userData?.role
-            tokenManager.userAvatar = response.userData?.avatar
-            tokenManager.isVerified = response.userData?.isVerified ?: false
+            tokenManager.userId = user?.userId
+            tokenManager.userEmail = user?.email // Email đăng ký tài khoản
+            tokenManager.userRole = user?.role
+            tokenManager.userAvatar = user?.avatar
+            tokenManager.isVerified = user?.isVerified ?: false
+
+            val studentProfile = user?.studentProfile
+            val employerProfile = user?.employerProfile
+
+            when {
+                studentProfile != null -> {
+                    tokenManager.saveStudentProfile(studentProfile)
+                }
+
+                employerProfile != null -> {
+                    tokenManager.saveEmployerProfile(employerProfile)
+                }
+
+                else -> {
+                    // User chưa đăng ký role
+                    tokenManager.userName = user?.name
+                    tokenManager.userPhone = user?.phone
+                }
+            }
         }
     ) {
         authRepository.login(request)
