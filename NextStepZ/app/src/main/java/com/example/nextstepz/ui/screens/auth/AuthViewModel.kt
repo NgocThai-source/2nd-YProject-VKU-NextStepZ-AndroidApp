@@ -1,6 +1,8 @@
+import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nextstepz.auth.data.model.BaseResponse
@@ -15,8 +17,8 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import retrofit2.HttpException
 
-class AuthViewModel : ViewModel() {
-    private val authRepository = AuthRepository()
+class AuthViewModel(application: Application) : AndroidViewModel(application) {
+    private val authRepository = AuthRepository(application)
     var authState by mutableStateOf<AuthState>(AuthState.Idle)
         private set
 
