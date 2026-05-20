@@ -12,6 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.nextstepz.chat.data.model.ChatMessage
 import com.example.nextstepz.ui.components.MessageBubble
 
 @Composable
@@ -21,12 +23,24 @@ fun ChatSandboxScreen(
     conversationId: String // Hardcode ID mà bạn vừa tạo bằng tay trên Supabase
 ) {
     val messages by viewModel.messages.collectAsState()
-    var inputText by remember { mutableStateOf("") }
 
     // Gọi event kết nối Socket ngay khi vào màn hình
     LaunchedEffect(Unit) {
         viewModel.connectSocket(conversationId, currentUserId)
     }
+
+    ChatSandboxContent(
+        messages = messages,
+        onSendMessage = { viewModel.sendMessage(it) }
+    )
+}
+
+@Composable
+fun ChatSandboxContent(
+    messages: List<ChatMessageUi>,
+    onSendMessage: (String) -> Unit
+) {
+    var inputText by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -40,8 +54,15 @@ fun ChatSandboxScreen(
                 .fillMaxWidth(),
             contentPadding = PaddingValues(16.dp)
         ) {
-            items(messages) { message ->
-                MessageBubble(message = message)
+            items(messages) { uiMessage ->
+                MessageBubble(
+                    message = ChatMessage(
+                        id = uiMessage.id,
+                        text = uiMessage.text,
+                        senderId = uiMessage.senderId,
+                        isMyMessage = uiMessage.isMyMessage
+                    )
+                )
             }
         }
 
@@ -57,7 +78,7 @@ fun ChatSandboxScreen(
                 value = inputText,
                 onValueChange = { inputText = it },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Nhập tin nhắn...", color = Color.Gray)},
+                placeholder = { Text("Nhập tin nhắn...", color = Color.Gray) },
                 shape = CircleShape,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.Black,
@@ -71,7 +92,7 @@ fun ChatSandboxScreen(
             IconButton(
                 onClick = {
                     if (inputText.isNotBlank()) {
-                        viewModel.sendMessage(conversationId, currentUserId, inputText)
+                        onSendMessage(inputText)
                         inputText = "" // Xóa text sau khi gửi
                     }
                 },
@@ -87,4 +108,38 @@ fun ChatSandboxScreen(
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ChatSandboxPreview() {
+    val sampleMessages = listOf(
+        ChatMessageUi(
+            id = "1",
+            text = "Chào bạn!",
+            senderId = "user1",
+            senderName = "Người gửi",
+            isMyMessage = false,
+            timestamp = "10:00",
+            isEdited = false,
+            isDeleted = false,
+            messageType = "text"
+        ),
+        ChatMessageUi(
+            id = "2",
+            text = "Chào! Bạn thế nào?",
+            senderId = "me",
+            senderName = "Tôi",
+            isMyMessage = true,
+            timestamp = "10:01",
+            isEdited = false,
+            isDeleted = false,
+            messageType = "text"
+        )
+    )
+
+    ChatSandboxContent(
+        messages = sampleMessages,
+        onSendMessage = {}
+    )
 }
