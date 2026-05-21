@@ -71,7 +71,7 @@ fun ChatSandboxScreen(
             IconButton(
                 onClick = {
                     if (inputText.isNotBlank()) {
-                        viewModel.sendMessage(conversationId, currentUserId, inputText)
+                        viewModel.sendMessage(conversationId, inputText)
                         inputText = "" // Xóa text sau khi gửi
                     }
                 },

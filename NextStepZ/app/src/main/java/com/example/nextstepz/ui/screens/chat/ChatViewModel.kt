@@ -1,5 +1,7 @@
 package com.example.nextstepz.ui.screens.chat
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nextstepz.chat.data.model.ChatMessage
@@ -12,7 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-class ChatViewModel : ViewModel() {
+class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private var socket: Socket? = null
 
     // Danh sách tin nhắn để UI lắng nghe
@@ -21,8 +23,14 @@ class ChatViewModel : ViewModel() {
 
     fun connectSocket(conversationId: String, currentUserId: String) {
         try {
+            //Lấy Token từ bộ nhớ ra
+            val sharedPref = getApplication<Application>().getSharedPreferences("AppPrefs", Application.MODE_PRIVATE)
+            val token = sharedPref.getString("ACCESS_TOKEN", "")
             // Nhớ dùng 10.0.2.2 cho máy ảo Android gọi xuống localhost của máy tính
-            val opts = IO.Options()
+            Log.d("ChatApp", "Token gửi qua Socket có bị rỗng không? -> [${token}]")
+            val opts = IO.Options().apply {
+                auth = mapOf("token" to token) // Node.js sẽ móc Token từ chỗ này!
+            }
             socket = IO.socket("http://10.0.2.2:5000", opts)
 
             socket?.connect()
@@ -30,7 +38,6 @@ class ChatViewModel : ViewModel() {
             // 1. Khi kết nối thành công, xin join vào phòng chat
             socket?.on(Socket.EVENT_CONNECT) {
                 Log.d("Chat", "Socket connected!")
-                socket?.emit("user_connected", currentUserId)
                 socket?.emit("join_conversation", conversationId)
                 Log.d("ChatApp", "Đã gửi yêu cầu join_conversation: $conversationId")
             }
@@ -73,10 +80,9 @@ class ChatViewModel : ViewModel() {
     }
 
     // 3. Gửi tin nhắn lên Backend
-    fun sendMessage(conversationId: String, currentUserId: String, content: String) {
+    fun sendMessage(conversationId: String, content: String) {
         val messageData = JSONObject().apply {
             put("conversationId", conversationId)
-            put("senderId", currentUserId)
             put("content", content)
         }
         socket?.emit("send_message", messageData)

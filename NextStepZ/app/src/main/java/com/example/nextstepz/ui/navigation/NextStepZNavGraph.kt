@@ -240,11 +240,11 @@ fun NextStepZNavGraph(
 
                 // TODO: Chỗ này bạn cần lấy ID của user đang đăng nhập hiện tại từ Supabase Auth.
                 // Ví dụ tạm thời gán cứng để bạn hình dung, khi chạy thật hãy thay bằng ID lấy từ Auth nhé:
-//                val currentUserId = "9b38990b-15d5-414c-ad85-a746e53f4bf6" //Nguyen
-                val currentUserId = "9255374e-1e6d-4e9b-b4ec-5b11b2652605" // Thai
+//                val currentUserId = "7fc5202b-de0b-4974-b268-c34ad3947ca6" //Nguyen
+                val currentUserId = "6c59ad7f-4b19-4c92-b0cf-0fc1488fb966" // Thai
 
                 // Dán cứng ID phòng chat bạn vừa tạo bằng tay trên bảng conversations ở Supabase
-                val testConversationId = "6d239a28-a46b-4aca-801c-03d6fa573e84"
+                val testConversationId = "af7cfa53-e227-4ca5-a597-963a7bb5c6af"
 
                 ChatSandboxScreen(
                     viewModel = chatViewModel,
