@@ -1,7 +1,9 @@
 package com.example.nextstepz.ui.screens.account
+import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nextstepz.auth.data.model.BaseResponse
@@ -13,8 +15,8 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import retrofit2.HttpException
 
-class RegisterEmployerViewModel : ViewModel() {
-    private val profileRepository = ProfileRepository()
+class RegisterEmployerViewModel(application: Application) : AndroidViewModel(application) {
+    private val profileRepository = ProfileRepository(application)
     var profileState by mutableStateOf<ProfileState>(ProfileState.Idle)
         private set
 

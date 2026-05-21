@@ -1,8 +1,10 @@
 package com.example.nextstepz.ui.screens.account
 
+import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nextstepz.auth.data.local.TokenManager
@@ -11,8 +13,8 @@ import com.example.nextstepz.auth.data.model.UpdatePasswordRequest
 import com.example.nextstepz.auth.data.repository.ProfileRepository
 import kotlinx.coroutines.launch
 
-class PrivacyViewModel : ViewModel() {
-    private val profileRepository = ProfileRepository()
+class PrivacyViewModel(application: Application) : AndroidViewModel(application) {
+    private val profileRepository = ProfileRepository(application)
     var profileState by mutableStateOf<ProfileState>(ProfileState.Idle)
         private set
 

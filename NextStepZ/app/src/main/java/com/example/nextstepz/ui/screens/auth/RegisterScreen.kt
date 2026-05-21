@@ -1,6 +1,5 @@
 package com.example.nextstepz.ui.screens.auth
 
-import com.example.nextstepz.ui.screens.auth.AuthViewModel
 import  android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
