@@ -1,5 +1,6 @@
 package com.example.nextstepz.ui.screens.chat
 import android.app.Application
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
@@ -24,7 +25,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     fun connectSocket(conversationId: String, currentUserId: String) {
         try {
             //Lấy Token từ bộ nhớ ra
-            val sharedPref = getApplication<Application>().getSharedPreferences("AppPrefs", Application.MODE_PRIVATE)
+            val sharedPref = getApplication<Application>().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
             val token = sharedPref.getString("ACCESS_TOKEN", "")
             // Nhớ dùng 10.0.2.2 cho máy ảo Android gọi xuống localhost của máy tính
             Log.d("ChatApp", "Token gửi qua Socket có bị rỗng không? -> [${token}]")
@@ -32,8 +33,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 auth = mapOf("token" to token) // Node.js sẽ móc Token từ chỗ này!
             }
             socket = IO.socket("http://10.0.2.2:5000", opts)
-
-            socket?.connect()
 
             // 1. Khi kết nối thành công, xin join vào phòng chat
             socket?.on(Socket.EVENT_CONNECT) {
@@ -73,7 +72,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
             }
-
+            socket?.connect()
         } catch (e: Exception) {
             Log.e("Chat", "Socket error", e)
         }

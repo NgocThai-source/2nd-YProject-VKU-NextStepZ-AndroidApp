@@ -66,4 +66,5 @@ dependencies {
 
     // Thư viện Gson để hỗ trợ parse JSON (rất cần khi gửi/nhận data với backend)
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 }
