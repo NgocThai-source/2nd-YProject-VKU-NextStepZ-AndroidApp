@@ -9,6 +9,8 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Work
 import androidx.compose.ui.graphics.vector.ImageVector
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 /**
  * Sealed class representing all navigation routes in the app.
@@ -36,6 +38,14 @@ sealed class Screen(val route: String) {
     data object Articles : Screen("articles")
     data object Messages : Screen("messages")
     data object Account : Screen("account")
+
+    data object ChatDetail : Screen("chat_detail/{conversationId}/{partnerName}/{partnerId}") {
+        fun createRoute(conversationId: String, partnerName: String, partnerId: String): String {
+            val encodedName = URLEncoder.encode(partnerName, StandardCharsets.UTF_8.toString())
+            val encodedId = URLEncoder.encode(partnerId, StandardCharsets.UTF_8.toString())
+            return "chat_detail/$conversationId/$encodedName/$encodedId"
+        }
+    }
 
     data object ChatSandbox : Screen("chat_sandbox")
 }
