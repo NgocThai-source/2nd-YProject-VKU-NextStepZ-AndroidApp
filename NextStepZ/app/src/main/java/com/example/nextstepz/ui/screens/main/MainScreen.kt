@@ -27,6 +27,7 @@ import com.example.nextstepz.ui.navigation.Screen
 import com.example.nextstepz.ui.navigation.bottomNavItems
 import com.example.nextstepz.ui.navigation.BottomNavItem
 import com.example.nextstepz.ui.screens.home.HomeScreen
+import com.example.nextstepz.feeds.ui.screens.FeedsScreen
 
 private const val TAB_TRANSITION = 300
 
@@ -68,8 +69,8 @@ fun MainScreen() {
                     composable(Screen.Jobs.route) {
                         PlaceholderScreen("Việc làm", Icons.Outlined.Work)
                     }
-                    composable(Screen.Articles.route) {
-                        PlaceholderScreen("Bài viết", Icons.AutoMirrored.Outlined.Article)
+                    composable(Screen.Feeds.route) {
+                        FeedsScreen()
                     }
                     composable(Screen.Messages.route) {
                         PlaceholderScreen("Tin Nhắn", Icons.AutoMirrored.Outlined.Chat)

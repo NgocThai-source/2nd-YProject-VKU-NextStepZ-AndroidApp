@@ -33,7 +33,7 @@ sealed class Screen(val route: String) {
     data object Home : Screen("home")
     data object CvProfile : Screen("cv_profile")
     data object Jobs : Screen("jobs")
-    data object Articles : Screen("articles")
+    data object Feeds : Screen("feeds")
     data object Messages : Screen("messages")
     data object Account : Screen("account")
 }
@@ -53,7 +53,7 @@ val bottomNavItems = listOf(
     BottomNavItem(Screen.Home, "Trang chủ", Icons.Outlined.Home),
     BottomNavItem(Screen.CvProfile, "Hồ sơ CV", Icons.Outlined.Description),
     BottomNavItem(Screen.Jobs, "Việc làm", Icons.Outlined.Work),
-    BottomNavItem(Screen.Articles, "Bài viết", Icons.AutoMirrored.Outlined.Article),
+    BottomNavItem(Screen.Feeds, "Bài viết", Icons.AutoMirrored.Outlined.Article),
     BottomNavItem(Screen.Messages, "Tin Nhắn", Icons.AutoMirrored.Outlined.Chat),
     BottomNavItem(Screen.Account, "Tài khoản", Icons.Outlined.Person),
 )
