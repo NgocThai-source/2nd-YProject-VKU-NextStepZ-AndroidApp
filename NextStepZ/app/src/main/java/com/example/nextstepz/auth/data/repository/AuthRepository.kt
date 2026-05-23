@@ -1,7 +1,6 @@
 package com.example.nextstepz.auth.data.repository
 
 import android.content.Context
-import androidx.core.content.contentValuesOf
 import com.example.nextstepz.auth.data.model.ForgotPasswordRequest
 import com.example.nextstepz.auth.data.model.ForgotPasswordResponse
 import com.example.nextstepz.auth.data.model.LoginRequest
@@ -10,31 +9,32 @@ import com.example.nextstepz.auth.data.model.RegisterRequest
 import com.example.nextstepz.auth.data.model.RegisterResponse
 import com.example.nextstepz.auth.data.model.ResetPasswordRequest
 import com.example.nextstepz.auth.data.model.VerifyOtpRequest
-import com.example.nextstepz.auth.data.remote.RetrofitClient
+import com.example.nextstepz.auth.data.remote.RetrofitClientAuth
 
 
 class AuthRepository(private  val context: Context) {
     suspend fun register(request: RegisterRequest): RegisterResponse {
-        return RetrofitClient.getApiInterface(context).register(request)
+        return RetrofitClientAuth.getAuthApiInterface(context).register(request)
     }
     suspend fun login(request: LoginRequest): LoginResponse {
 
-        val response = RetrofitClient.getApiInterface(context).login(request)
+        val response = RetrofitClientAuth.getAuthApiInterface(context).login(request)
         if(response.success && !response.token.isNullOrEmpty()){
             val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
             sharedPreferences.edit().putString("ACCESS_TOKEN", response.token).apply()
+            sharedPreferences.edit().putString("USER_ID", response.userData?.userId).apply()
         }
         return response
     }
     suspend fun forgotPassword(request: ForgotPasswordRequest): ForgotPasswordResponse {
-        return RetrofitClient.getApiInterface(context).forgotPassword(request)
+        return RetrofitClientAuth.getAuthApiInterface(context).forgotPassword(request)
     }
 
     suspend fun verifyOtp(request: VerifyOtpRequest): ForgotPasswordResponse {
-        return RetrofitClient.getApiInterface(context).verifyOtp(request)
+        return RetrofitClientAuth.getAuthApiInterface(context).verifyOtp(request)
     }
 
     suspend fun resetPassword(request: ResetPasswordRequest): ForgotPasswordResponse {
-        return RetrofitClient.getApiInterface(context).ResetPassword(request)
+        return RetrofitClientAuth.getAuthApiInterface(context).ResetPassword(request)
     }
 }

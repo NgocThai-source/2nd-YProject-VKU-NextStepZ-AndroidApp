@@ -1,5 +1,7 @@
 package com.example.nextstepz.ui.screens.chat
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -62,9 +64,11 @@ import com.example.nextstepz.ui.theme.TextPrimary
 import com.example.nextstepz.ui.theme.TextSecondary
 import com.example.nextstepz.ui.theme.TextTertiary
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.nextstepz.chat.data.model.ConversationUi
 import com.example.nextstepz.ui.theme.NextStepZTheme
 import kotlinx.coroutines.delay
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ChatListScreen(
     currentUserId: String,
@@ -372,7 +376,7 @@ private fun UnreadBadge(count: Int) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = if (count > 99) "99+" else count.toString(),
+            text = if (count > 1) "n+" else count.toString(),
             color = TextOnGradient,
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold

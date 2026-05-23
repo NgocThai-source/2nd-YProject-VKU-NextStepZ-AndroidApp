@@ -1,50 +1,44 @@
 package com.example.nextstepz.chat.data.repository
 
-import com.example.nextstepz.auth.data.remote.RetrofitClient
-import com.example.nextstepz.chat.data.model.ConversationResponse
+import android.content.Context
 import com.example.nextstepz.chat.data.model.CreateConversationRequest
 import com.example.nextstepz.chat.data.model.CreateConversationResponse
 import com.example.nextstepz.chat.data.model.MessageResponse
+import com.example.nextstepz.chat.data.model.MyConversationResponse
+import com.example.nextstepz.chat.data.remote.RetrofitClientChat
 
-class ChatRepository {
-    private val chatApi = RetrofitClient.chatApi
+class ChatRepository(private val context: Context) {
 
-    suspend fun getConversations(profileId: String): Result<ConversationResponse> {
+    // 1. LẤY DANH SÁCH CUỘC TRÒ CHUYỆN
+    suspend fun getConversations(): Result<MyConversationResponse> {
         return try {
-            val response = chatApi.getConversations(profileId)
-            if (response.success) {
-                Result.success(response)
-            } else {
-                Result.failure(Exception(response.message))
-            }
+            // Chờ Retrofit lấy data về
+            val response = RetrofitClientChat.getChatApiInterface(context).getConversations()
+            // Thành công thì bọc vào Result.success
+            Result.success(response)
         } catch (e: Exception) {
+            // Lỗi mạng, sập server... thì bọc vào Result.failure
             Result.failure(e)
         }
     }
 
+    // 2. LẤY LỊCH SỬ TIN NHẮN
     suspend fun getMessages(conversationId: String, page: Int = 1, limit: Int = 50): Result<MessageResponse> {
         return try {
-            val response = chatApi.getMessages(conversationId, page, limit)
-            if (response.success) {
-                Result.success(response)
-            } else {
-                Result.failure(Exception(response.message))
-            }
+            val response = RetrofitClientChat.getChatApiInterface(context).getMessages(conversationId, page, limit)
+            Result.success(response)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun createOrGetConversation(myProfileId: String, partnerProfileId: String): Result<CreateConversationResponse> {
+    // 3. TẠO HOẶC LẤY PHÒNG CHAT
+    suspend fun createOrGetConversation(partnerProfileId: String): Result<CreateConversationResponse> {
         return try {
-            val response = chatApi.createOrGetConversation(
-                CreateConversationRequest(myProfileId, partnerProfileId)
-            )
-            if (response.success) {
-                Result.success(response)
-            } else {
-                Result.failure(Exception(response.message))
-            }
+            // Tự động đóng gói chuỗi String thành Request Object ở ngay tầng Repo
+            val request = CreateConversationRequest(partnerProfileId)
+            val response = RetrofitClientChat.getChatApiInterface(context).createOrGetConversation(request)
+            Result.success(response)
         } catch (e: Exception) {
             Result.failure(e)
         }

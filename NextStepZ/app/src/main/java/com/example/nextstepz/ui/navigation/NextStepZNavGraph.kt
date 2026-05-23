@@ -1,5 +1,8 @@
 package com.example.nextstepz.ui.navigation
 
+import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -8,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -19,7 +23,8 @@ import com.example.nextstepz.ui.screens.auth.LoginScreen
 import com.example.nextstepz.ui.screens.auth.NewPasswordScreen
 import com.example.nextstepz.ui.screens.auth.OtpVerificationScreen
 import com.example.nextstepz.ui.screens.auth.RegisterScreen
-import com.example.nextstepz.ui.screens.chat.ChatSandboxScreen
+import com.example.nextstepz.ui.screens.chat.ChatDetailScreen
+import com.example.nextstepz.ui.screens.chat.ChatListScreen
 import com.example.nextstepz.ui.screens.chat.ChatViewModel
 import com.example.nextstepz.ui.screens.main.MainScreen
 
@@ -30,6 +35,7 @@ private const val TRANSITION_DURATION = 350
  * Background is rendered once at this level so transitions between screens
  * never show a gap/flash. Only the foreground content animates.
  */
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NextStepZNavGraph(
     navController: NavHostController,
@@ -74,7 +80,7 @@ fun NextStepZNavGraph(
                         }
                     },
                     onNavigateToHome = {
-                        navController.navigate(Screen.ChatSandbox.route) {
+                        navController.navigate(Screen.Main.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                             launchSingleTop = true
                         }
@@ -214,42 +220,42 @@ fun NextStepZNavGraph(
                     }
                 )
             }
-            composable(
-                route = Screen.Main.route,
-                enterTransition = {
-                    fadeIn(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
-                },
-                exitTransition = {
-                    fadeOut(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
-                }
-            ){
-                MainScreen()
+            composable(route = Screen.Main.route) {
+                MainScreen(
+                    onNavigateToChatDetail = { convId, name, partnerId ->
+                        // Bắn qua màn hình chi tiết (sẽ tự động che Bottom Nav đi)
+                        navController.navigate(Screen.ChatDetail.createRoute(convId, name, partnerId))
+                    }
+                )
             }
-            // ─── Màn hình Test Chat Realtime ────────────────────────
+
+// ─── CHAT DETAIL SCREEN ────────────────────────────────
             composable(
-                route = Screen.ChatSandbox.route,
-                enterTransition = {
-                    fadeIn(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
-                },
-                exitTransition = {
-                    fadeOut(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
-                }
-            ) {
-                // Khởi tạo ViewModel (sử dụng viewModels() hoặc koin/hilt tùy project của bạn)
+                route = Screen.ChatDetail.route,
+                arguments = listOf(
+                    navArgument("conversationId") { type = NavType.StringType },
+                    navArgument("partnerName") { type = NavType.StringType },
+                    navArgument("partnerId") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val conversationId = backStackEntry.arguments?.getString("conversationId") ?: ""
+                val partnerId = backStackEntry.arguments?.getString("partnerId") ?: ""
+
+                // NHỚ DECODE TÊN ĐỂ TRẢ LẠI KHOẢNG TRẮNG VÀ DẤU TIẾNG VIỆT
+                val encodedName = backStackEntry.arguments?.getString("partnerName") ?: ""
+                val partnerName = java.net.URLDecoder.decode(encodedName, java.nio.charset.StandardCharsets.UTF_8.toString())
+
                 val chatViewModel: ChatViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                val context = androidx.compose.ui.platform.LocalContext.current
+                val sharedPref = context.getSharedPreferences("AppPrefs", android.content.Context.MODE_PRIVATE)
+                val currentUserId = sharedPref.getString("USER_ID", "") ?: ""
 
-                // TODO: Chỗ này bạn cần lấy ID của user đang đăng nhập hiện tại từ Supabase Auth.
-                // Ví dụ tạm thời gán cứng để bạn hình dung, khi chạy thật hãy thay bằng ID lấy từ Auth nhé:
-//                val currentUserId = "7fc5202b-de0b-4974-b268-c34ad3947ca6" //Nguyen
-                val currentUserId = "6c59ad7f-4b19-4c92-b0cf-0fc1488fb966" // Thai
-
-                // Dán cứng ID phòng chat bạn vừa tạo bằng tay trên bảng conversations ở Supabase
-                val testConversationId = "af7cfa53-e227-4ca5-a597-963a7bb5c6af"
-
-                ChatSandboxScreen(
-                    viewModel = chatViewModel,
+                ChatDetailScreen(
+                    conversationId = conversationId,
+                    partnerName = partnerName,
                     currentUserId = currentUserId,
-                    conversationId = testConversationId
+                    onNavigateBack = { navController.popBackStack() },
+                    viewModel = chatViewModel
                 )
             }
         }

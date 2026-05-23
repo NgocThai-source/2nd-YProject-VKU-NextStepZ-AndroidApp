@@ -1,22 +1,22 @@
 package com.example.nextstepz.auth.data.remote
 import AuthInterceptor
 import android.content.Context
-import com.example.nextstepz.auth.data.remote.AuthApi
+import com.example.nextstepz.chat.data.remote.ChatApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object RetrofitClient {
+object RetrofitClientAuth {
     private const val BASE_URL = "http://10.0.2.2:5000/"
 
     // Biến lưu trữ Singleton để không phải tạo lại nhiều lần
     @Volatile
-    private var instance: AuthApi? = null
+    private var instanceAuthApi: AuthApi? = null
 
     // Đổi thành hàm nhận Context
-    fun getApiInterface(context: Context): AuthApi {
-        return instance ?: synchronized(this) {
+    fun getAuthApiInterface(context: Context): AuthApi {
+        return instanceAuthApi ?: synchronized(this) {
 
             val loggingInterceptor = HttpLoggingInterceptor().apply {
                 // LEVEL.BODY sẽ in ra TẤT CẢ mọi thứ: Headers (chứa Token) và Body (chứa data)
@@ -26,6 +26,7 @@ object RetrofitClient {
             // Lưu ý: Dùng context.applicationContext để tránh rò rỉ bộ nhớ (Memory Leak)
             val okHttpClient = OkHttpClient.Builder()
                 .addInterceptor(AuthInterceptor(context.applicationContext))
+                .addInterceptor(loggingInterceptor)
                 .build()
 
             // 2. Khởi tạo Retrofit và gắn cái OkHttpClient vừa tạo ở trên vào
@@ -36,7 +37,7 @@ object RetrofitClient {
                 .build()
 
             // 3. Tạo ApiInterface và gán vào biến instance
-            retrofit.create(AuthApi::class.java).also { instance = it }
+            retrofit.create(AuthApi::class.java).also { instanceAuthApi = it }
         }
     }
 }
