@@ -1,3 +1,5 @@
+package com.example.nextstepz.ui.screens.auth
+
 import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,7 +14,6 @@ import com.example.nextstepz.auth.data.model.RegisterRequest
 import com.example.nextstepz.auth.data.model.ResetPasswordRequest
 import com.example.nextstepz.auth.data.model.VerifyOtpRequest
 import com.example.nextstepz.auth.data.repository.AuthRepository
-import com.example.nextstepz.ui.screens.auth.AuthState
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import retrofit2.HttpException

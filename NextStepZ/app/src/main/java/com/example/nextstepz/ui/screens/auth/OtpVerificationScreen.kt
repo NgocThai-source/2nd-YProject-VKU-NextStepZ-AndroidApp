@@ -1,6 +1,5 @@
 package com.example.nextstepz.ui.screens.auth
 
-import AuthViewModel
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.RepeatMode
