@@ -4,12 +4,10 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -428,31 +426,13 @@ private fun EngagedPostCard(
     onNameClick: () -> Unit,
     onMenuClick: () -> Unit
 ) {
-    var triggeredBy by remember { mutableStateOf<String?>(null) }
-    var triggerId by remember { mutableIntStateOf(0) }
     var isVisible by remember { mutableStateOf(false) }
-    var shimmerTick by remember { mutableIntStateOf(0) }
 
     val entranceDelay = (index * 30).coerceAtMost(250)
 
     LaunchedEffect(post.id) {
         delay(entranceDelay.toLong())
         isVisible = true
-    }
-
-    LaunchedEffect(refreshTick) {
-        if (refreshTick > 0) {
-            shimmerTick = refreshTick
-            delay(300)
-            shimmerTick = 0
-        }
-    }
-
-    LaunchedEffect(triggerId) {
-        if (triggeredBy != null) {
-            delay(350)
-            triggeredBy = null
-        }
     }
 
     val entranceAlpha by animateFloatAsState(
@@ -467,72 +447,19 @@ private fun EngagedPostCard(
         label = "entrance_offset"
     )
 
-    val engagementScale by animateFloatAsState(
-        targetValue = when (triggeredBy) {
-            "like" -> 1.04f
-            "bookmark" -> 1.06f
-            else -> 1f
-        },
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "engagement_scale"
-    )
-
-    val engagementGlow by animateFloatAsState(
-        targetValue = if (triggeredBy != null) 1f else 0f,
-        animationSpec = tween(durationMillis = 200),
-        label = "engagement_glow"
-    )
-
-    val engagementColor = when (triggeredBy) {
-        "like" -> ErrorRed
-        "bookmark" -> GradientMid
-        else -> GradientStart
-    }
-
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .graphicsLayer {
                 alpha = entranceAlpha
                 translationY = entranceOffset
-                scaleX = engagementScale
-                scaleY = engagementScale
             }
-            .then(
-                if (engagementGlow > 0f) {
-                    Modifier.drawBehind {
-                        val glowAlpha = engagementGlow * 0.3f
-                        drawRoundRect(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    engagementColor.copy(alpha = glowAlpha),
-                                    Color.Transparent
-                                ),
-                                center = Offset(size.width / 2, size.height / 2),
-                                radius = size.maxDimension
-                            ),
-                            cornerRadius = CornerRadius(20.dp.toPx()),
-                        )
-                    }
-                } else Modifier
-            )
     ) {
         PostCard(
             post = post,
-            onLikeClick = {
-                triggeredBy = "like"
-                triggerId += 1
-                onLikeClick()
-            },
+            onLikeClick = onLikeClick,
             onCommentClick = onCommentClick,
-            onBookmarkClick = {
-                triggeredBy = "bookmark"
-                triggerId += 1
-                onBookmarkClick()
-            },
+            onBookmarkClick = onBookmarkClick,
             onAvatarClick = onAvatarClick,
             onNameClick = onNameClick,
             onMenuClick = onMenuClick
