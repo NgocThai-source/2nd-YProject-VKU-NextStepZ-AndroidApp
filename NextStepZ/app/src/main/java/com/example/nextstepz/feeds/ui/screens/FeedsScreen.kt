@@ -61,6 +61,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -76,6 +77,7 @@ import com.example.nextstepz.feeds.ui.components.ReportModal
 import com.example.nextstepz.feeds.ui.components.PostMenuSheet
 import com.example.nextstepz.feeds.ui.components.UserReportModal
 import com.example.nextstepz.feeds.data.model.UserReportReason
+import com.example.nextstepz.ui.components.SectionHeader
 import com.example.nextstepz.feeds.ui.viewmodel.CommentSheetState
 import com.example.nextstepz.feeds.ui.viewmodel.FeedsUiState
 import com.example.nextstepz.feeds.ui.viewmodel.FeedsViewModel
@@ -99,6 +101,7 @@ import kotlin.math.sin
 fun FeedsScreen(
     viewModel: FeedsViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val uiState by viewModel.uiState
     val isRefreshing by viewModel.isRefreshing
     val selectedFilter by viewModel.selectedFilter
@@ -137,19 +140,7 @@ fun FeedsScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Bài viết",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = TextPrimary
-                        )
-                    }
+                    SectionHeader(title = "Bài viết")
                 }
 
                 item {
@@ -164,12 +155,14 @@ fun FeedsScreen(
                 }
 
                 item {
-                    AnimatedVisibility(
-                        visible = isRefreshing,
-                        enter = fadeIn(tween(200)),
-                        exit = fadeOut(tween(200))
-                    ) {
-                        RefreshHeader(isRefreshing = true)
+                    Column {
+                        AnimatedVisibility(
+                            visible = isRefreshing,
+                            enter = fadeIn(tween(200)),
+                            exit = fadeOut(tween(200))
+                        ) {
+                            RefreshHeader(isRefreshing = true)
+                        }
                     }
                 }
 

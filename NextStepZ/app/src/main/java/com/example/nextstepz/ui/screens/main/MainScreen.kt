@@ -8,11 +8,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Work
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +26,7 @@ import com.example.nextstepz.ui.navigation.bottomNavItems
 import com.example.nextstepz.ui.navigation.BottomNavItem
 import com.example.nextstepz.ui.screens.home.HomeScreen
 import com.example.nextstepz.feeds.ui.screens.FeedsScreen
+import com.example.nextstepz.feeds.jobs.ui.screens.JobsScreen
 
 private const val TAB_TRANSITION = 300
 
@@ -67,7 +66,7 @@ fun MainScreen() {
                         PlaceholderScreen("Hồ sơ CV", Icons.Outlined.Description)
                     }
                     composable(Screen.Jobs.route) {
-                        PlaceholderScreen("Việc làm", Icons.Outlined.Work)
+                        JobsScreen()
                     }
                     composable(Screen.Feeds.route) {
                         FeedsScreen()

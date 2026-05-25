@@ -4,7 +4,7 @@ import android.net.Uri
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.Chat
-import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Work
@@ -51,7 +51,7 @@ data class BottomNavItem(
  */
 val bottomNavItems = listOf(
     BottomNavItem(Screen.Home, "Trang chủ", Icons.Outlined.Home),
-    BottomNavItem(Screen.CvProfile, "Hồ sơ CV", Icons.Outlined.Description),
+    BottomNavItem(Screen.CvProfile, "Thông báo", Icons.Outlined.Notifications),
     BottomNavItem(Screen.Jobs, "Việc làm", Icons.Outlined.Work),
     BottomNavItem(Screen.Feeds, "Bài viết", Icons.AutoMirrored.Outlined.Article),
     BottomNavItem(Screen.Messages, "Tin Nhắn", Icons.AutoMirrored.Outlined.Chat),
