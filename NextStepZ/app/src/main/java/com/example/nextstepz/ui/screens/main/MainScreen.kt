@@ -9,24 +9,27 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
-import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Work
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.nextstepz.data.repository.NotificationRepository
 import com.example.nextstepz.ui.components.BottomNavBar
 import com.example.nextstepz.ui.navigation.Screen
 import com.example.nextstepz.ui.navigation.bottomNavItems
-import com.example.nextstepz.ui.navigation.BottomNavItem
 import com.example.nextstepz.ui.screens.home.HomeScreen
+import com.example.nextstepz.ui.screens.notification.NotificationScreen
+import com.example.nextstepz.ui.screens.notification.NotificationViewModel
 
 private const val TAB_TRANSITION = 300
 
@@ -37,13 +40,14 @@ private const val TAB_TRANSITION = 300
 @Composable
 fun MainScreen() {
     val innerNavController = rememberNavController()
-    var currentRoute by rememberSaveable { mutableStateOf(Screen.Home.route) }
+    var currentRoute by rememberSaveable { mutableIntStateOf(0) }
+    val notificationRepository = remember { NotificationRepository() }
+    val notifications by notificationRepository.notifications.collectAsState()
+    val unreadCount = notifications.count { !it.isRead }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // Content + bottom nav
         Column(modifier = Modifier.fillMaxSize()) {
-            // Tab content area
             Box(modifier = Modifier.weight(1f)) {
                 NavHost(
                     navController = innerNavController,
@@ -62,6 +66,11 @@ fun MainScreen() {
                     }
                 ) {
                     composable(Screen.Home.route) { HomeScreen() }
+                    composable(Screen.Notification.route) {
+                        NotificationScreen(
+                            viewModel = NotificationViewModel(notificationRepository)
+                        )
+                    }
                     composable(Screen.CvProfile.route) {
                         PlaceholderScreen("Hồ sơ CV", Icons.Outlined.Description)
                     }
@@ -71,29 +80,27 @@ fun MainScreen() {
                     composable(Screen.Articles.route) {
                         PlaceholderScreen("Bài viết", Icons.AutoMirrored.Outlined.Article)
                     }
-                    composable(Screen.Messages.route) {
-                        PlaceholderScreen("Tin Nhắn", Icons.AutoMirrored.Outlined.Chat)
-                    }
                     composable(Screen.Account.route) {
                         PlaceholderScreen("Tài khoản", Icons.Outlined.Person)
                     }
                 }
             }
 
-            // Bottom navigation bar
             BottomNavBar(
                 items = bottomNavItems,
-                currentRoute = currentRoute,
+                currentRoute = bottomNavItems[currentRoute].screen.route,
                 onItemClick = { item ->
-                    if (currentRoute != item.screen.route) {
-                        currentRoute = item.screen.route
+                    val index = bottomNavItems.indexOf(item)
+                    if (currentRoute != index) {
+                        currentRoute = index
                         innerNavController.navigate(item.screen.route) {
                             popUpTo(Screen.Home.route) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
                         }
                     }
-                }
+                },
+                unreadCount = unreadCount
             )
         }
     }

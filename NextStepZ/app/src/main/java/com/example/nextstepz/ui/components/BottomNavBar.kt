@@ -1,5 +1,8 @@
 package com.example.nextstepz.ui.components
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,15 +20,18 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nextstepz.ui.navigation.BottomNavItem
 import com.example.nextstepz.ui.navigation.Screen
+import com.example.nextstepz.ui.theme.BrandBlue
+import com.example.nextstepz.ui.theme.ErrorRed
 import com.example.nextstepz.ui.theme.GlassBorder
 import com.example.nextstepz.ui.theme.GradientEnd
 import com.example.nextstepz.ui.theme.GradientMid
@@ -49,6 +57,7 @@ fun BottomNavBar(
     items: List<BottomNavItem>,
     currentRoute: String,
     onItemClick: (BottomNavItem) -> Unit,
+    unreadCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -80,7 +89,9 @@ fun BottomNavBar(
                 BottomNavItemView(
                     item = item,
                     isSelected = isSelected,
-                    onClick = { onItemClick(item) }
+                    onClick = { onItemClick(item) },
+                    showBadge = item.screen.route == Screen.Notification.route,
+                    badgeCount = unreadCount
                 )
             }
         }
@@ -91,7 +102,9 @@ fun BottomNavBar(
 private fun BottomNavItemView(
     item: BottomNavItem,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    showBadge: Boolean = false,
+    badgeCount: Int = 0
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -142,6 +155,34 @@ private fun BottomNavItemView(
                     tint = NavBarInactive,
                     modifier = Modifier.size(22.dp)
                 )
+            }
+
+            // Unread badge
+            if (showBadge && badgeCount > 0) {
+                val scale by animateFloatAsState(
+                    targetValue = 1f,
+                    animationSpec = tween(300, easing = FastOutSlowInEasing),
+                    label = "badgeScale"
+                )
+                Box(
+                    modifier = Modifier
+                        .offset(x = 12.dp, y = (-4).dp)
+                        .scale(scale)
+                        .size(if (badgeCount > 9) 18.dp else 16.dp)
+                        .clip(CircleShape)
+                        .background(ErrorRed)
+                        .padding(horizontal = 3.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (badgeCount > 99) "99+" else badgeCount.toString(),
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Color.White
+                    )
+                }
             }
         }
 

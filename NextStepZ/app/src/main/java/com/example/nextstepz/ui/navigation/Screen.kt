@@ -3,9 +3,9 @@ package com.example.nextstepz.ui.navigation
 import android.net.Uri
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
-import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Work
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -31,6 +31,7 @@ sealed class Screen(val route: String) {
     // ─── Main Flow (Bottom Nav) ─────────────────────────────────
     data object Main : Screen("main")
     data object Home : Screen("home")
+    data object Notification : Screen("notification")
     data object CvProfile : Screen("cv_profile")
     data object Jobs : Screen("jobs")
     data object Articles : Screen("articles")
@@ -51,9 +52,9 @@ data class BottomNavItem(
  */
 val bottomNavItems = listOf(
     BottomNavItem(Screen.Home, "Trang chủ", Icons.Outlined.Home),
+    BottomNavItem(Screen.Notification, "Thông báo", Icons.Outlined.Notifications),
     BottomNavItem(Screen.CvProfile, "Hồ sơ CV", Icons.Outlined.Description),
     BottomNavItem(Screen.Jobs, "Việc làm", Icons.Outlined.Work),
     BottomNavItem(Screen.Articles, "Bài viết", Icons.AutoMirrored.Outlined.Article),
-    BottomNavItem(Screen.Messages, "Tin Nhắn", Icons.AutoMirrored.Outlined.Chat),
     BottomNavItem(Screen.Account, "Tài khoản", Icons.Outlined.Person),
 )
