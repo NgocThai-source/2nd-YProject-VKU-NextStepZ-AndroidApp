@@ -1,3 +1,5 @@
+package com.example.nextstepz.ui.screens.auth
+
 import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -5,64 +7,138 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.nextstepz.auth.data.local.TokenManager
 import com.example.nextstepz.auth.data.model.BaseResponse
 import com.example.nextstepz.auth.data.model.ForgotPasswordRequest
 import com.example.nextstepz.auth.data.model.LoginRequest
 import com.example.nextstepz.auth.data.model.RegisterRequest
 import com.example.nextstepz.auth.data.model.ResetPasswordRequest
+import com.example.nextstepz.auth.data.model.UserData
 import com.example.nextstepz.auth.data.model.VerifyOtpRequest
 import com.example.nextstepz.auth.data.repository.AuthRepository
-import com.example.nextstepz.ui.screens.auth.AuthState
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import retrofit2.HttpException
 
 class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val authRepository = AuthRepository(application)
+
     var authState by mutableStateOf<AuthState>(AuthState.Idle)
         private set
 
-    // SỬ DỤNG GENERICS: <T : BaseResponse>
-    private fun <T : BaseResponse> executeAuthAction(apiCall: suspend () -> T) {
+    var currentUserData by mutableStateOf<UserData?>(null)
+        private set
+    private fun <T : BaseResponse> executeAuthAction(
+        onSuccess: (T) -> Unit = {},
+        apiCall: suspend () -> T
+
+    ) {
         viewModelScope.launch {
             authState = AuthState.Loading
+
             try {
-                // Gọi API
                 val response = apiCall()
 
-                // Trực tiếp gọi thuộc tính, KHÔNG dùng Reflection
                 if (response.success) {
+                    onSuccess(response)
                     authState = AuthState.Success(response.message)
                 } else {
                     authState = AuthState.Error(response.message)
                 }
-
             } catch (e: HttpException) {
-                // Xử lý lỗi từ Node.js (Vẫn giữ nguyên, chạy rất tốt)
                 val errorBodyString = e.response()?.errorBody()?.string()
+
                 val messageFromServer = try {
                     JSONObject(errorBodyString ?: "").getString("message")
                 } catch (jsonException: Exception) {
                     "Lỗi định dạng dữ liệu từ Server"
                 }
-                authState = AuthState.Error(messageFromServer)
 
+                authState = AuthState.Error(messageFromServer)
             } catch (e: Exception) {
                 authState = AuthState.Error("Đã xảy ra lỗi kết nối: ${e.message}")
             }
         }
     }
 
-    // Các hàm gọi API của bạn sẽ ngắn gọn và sạch sẽ như thế này:
-    fun register(request: RegisterRequest) = executeAuthAction { authRepository.register(request) }
+    fun register(
+        request: RegisterRequest,
+        tokenManager: TokenManager
+    ) = executeAuthAction(
+        onSuccess = { response ->
+            val user = response.userData
 
-    fun login(request: LoginRequest) = executeAuthAction { authRepository.login(request) }
+            currentUserData = user
 
-    fun forgotPassword(request: ForgotPasswordRequest) = executeAuthAction { authRepository.forgotPassword(request) }
+            tokenManager.userId = user?.userId
+            tokenManager.userName = user?.name
+            tokenManager.userEmail = user?.email
+            tokenManager.userPhone = user?.phone
+            tokenManager.userRole = user?.role
+            tokenManager.userAvatar = user?.avatar
+            tokenManager.isVerified = user?.isVerified ?: false
+        }
+    ) {
+        authRepository.register(request)
+    }
 
-    fun verifyOtp(request: VerifyOtpRequest) = executeAuthAction { authRepository.verifyOtp(request) }
+    fun login(
+        request: LoginRequest,
+        tokenManager: TokenManager
+    ) = executeAuthAction(
+        onSuccess = { response ->
+            val user = response.userData
 
-    fun resetPassword(request: ResetPasswordRequest) = executeAuthAction { authRepository.resetPassword(request) }
+            currentUserData = user
+
+            // Thông tin tài khoản đăng nhập
+            tokenManager.token = response.token
+            tokenManager.userId = user?.userId
+            tokenManager.userEmail = user?.email // Email đăng ký tài khoản
+            tokenManager.userRole = user?.role
+            tokenManager.userAvatar = user?.avatar
+            tokenManager.isVerified = user?.isVerified ?: false
+
+            val studentProfile = user?.studentProfile
+            val employerProfile = user?.employerProfile
+
+            when {
+                studentProfile != null -> {
+                    tokenManager.saveStudentProfile(studentProfile)
+                }
+
+                employerProfile != null -> {
+                    tokenManager.saveEmployerProfile(employerProfile)
+                }
+
+                else -> {
+                    // User chưa đăng ký role
+                    tokenManager.userName = user?.name
+                    tokenManager.userPhone = user?.phone
+                }
+            }
+        }
+    ) {
+        authRepository.login(request)
+    }
+
+    fun forgotPassword(
+        request: ForgotPasswordRequest
+    ) = executeAuthAction {
+        authRepository.forgotPassword(request)
+    }
+
+    fun verifyOtp(
+        request: VerifyOtpRequest
+    ) = executeAuthAction {
+        authRepository.verifyOtp(request)
+    }
+
+    fun resetPassword(
+        request: ResetPasswordRequest
+    ) = executeAuthAction {
+        authRepository.resetPassword(request)
+    }
 
     fun resetState() {
         authState = AuthState.Idle

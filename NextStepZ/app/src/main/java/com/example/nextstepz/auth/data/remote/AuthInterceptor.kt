@@ -8,7 +8,7 @@ class AuthInterceptor(private val context: Context) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val sharedPref = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
         val token = sharedPref.getString("ACCESS_TOKEN", null)
-
+        val request = chain.request();
         val requestBuilder = chain.request().newBuilder()
         if (!token.isNullOrEmpty()) {
             requestBuilder.addHeader("Authorization", "Bearer $token")
@@ -16,9 +16,12 @@ class AuthInterceptor(private val context: Context) : Interceptor {
 
         // Thực thi request
         val response = chain.proceed(requestBuilder.build())
+        // Lấy đường dẫn của API đang gọi để kiểm tra
+        val urlPath = request.url.encodedPath
+        val isAuthRoute = urlPath.contains("login")  || urlPath.contains("register")
 
         // NẾU PHÁT HIỆN LỖI 401 (HẾT HẠN TOKEN) TỪ NODE.JS
-        if (response.code == 401) {
+        if (response.code == 401 && !isAuthRoute) {
             // 1. Xóa token cũ đi
             sharedPref.edit().remove("ACCESS_TOKEN").apply()
 

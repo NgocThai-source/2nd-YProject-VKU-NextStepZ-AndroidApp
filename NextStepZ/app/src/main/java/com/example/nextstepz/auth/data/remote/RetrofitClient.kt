@@ -27,6 +27,7 @@ object RetrofitClient {
             // Lưu ý: Dùng context.applicationContext để tránh rò rỉ bộ nhớ (Memory Leak)
             val okHttpClient = OkHttpClient.Builder()
                 .addInterceptor(AuthInterceptor(context.applicationContext))
+                .addInterceptor(loggingInterceptor)
                 .build()
 
             // 2. Khởi tạo Retrofit và gắn cái OkHttpClient vừa tạo ở trên vào

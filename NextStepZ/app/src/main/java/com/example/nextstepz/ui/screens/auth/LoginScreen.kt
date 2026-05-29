@@ -1,6 +1,5 @@
 package com.example.nextstepz.ui.screens.auth
 
-import AuthViewModel
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -49,6 +48,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextstepz.R
+import com.example.nextstepz.auth.data.local.TokenManager
 import com.example.nextstepz.auth.data.model.LoginRequest
 
 import com.example.nextstepz.ui.components.GlassCard
@@ -77,6 +77,7 @@ fun LoginScreen(
     var password by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
+    val tokenManager = remember { TokenManager(context) }
     val authState = viewModel.authState
     LaunchedEffect(authState) {
         if(authState is AuthState.Success){
@@ -209,7 +210,7 @@ fun LoginScreen(
                 text = "Đăng nhập",
                 onClick = {
                     val request = LoginRequest(email, password)
-                    viewModel.login(request)
+                    viewModel.login(request, tokenManager)
                 },
                 isLoading = authState is AuthState.Loading,
                 enabled = email.isNotBlank() && password.isNotBlank()

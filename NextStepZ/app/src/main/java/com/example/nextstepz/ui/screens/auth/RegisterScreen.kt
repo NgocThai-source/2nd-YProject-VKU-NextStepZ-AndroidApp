@@ -1,6 +1,5 @@
 package com.example.nextstepz.ui.screens.auth
 
-import AuthViewModel
 import  android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -50,6 +49,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextstepz.R
+import com.example.nextstepz.auth.data.local.TokenManager
 import com.example.nextstepz.auth.data.model.RegisterRequest
 import com.example.nextstepz.ui.components.GlassCard
 import com.example.nextstepz.ui.components.GradientButton
@@ -78,7 +78,7 @@ fun RegisterScreen(
 
     // Validate confirm password
     val passwordMismatch = confirmPassword.isNotEmpty() && password != confirmPassword
-
+    val tokenManager = remember { TokenManager(context) }
     // ─── LẮNG NGHE TRẠNG THÁI TỪ VIEWMODEL ─────────────────────
     val authState = viewModel.authState
     LaunchedEffect(authState) {
@@ -244,7 +244,7 @@ fun RegisterScreen(
                 text = "Đăng ký",
                 onClick = {
                     val request = RegisterRequest(fullName, email, password)
-                    viewModel.register(request)
+                    viewModel.register(request, tokenManager)
                 },
                 isLoading = authState is AuthState.Loading,
                 enabled = fullName.isNotBlank() &&
