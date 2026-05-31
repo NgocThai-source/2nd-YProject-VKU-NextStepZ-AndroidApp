@@ -58,6 +58,7 @@ import com.example.nextstepz.ui.theme.TextTertiary
 @Composable
 fun ProfilePreviewModal(
     post: Post,
+    isUserReported: Boolean,
     onDismiss: () -> Unit,
     onMessageClick: (String) -> Unit,
     onReportUserClick: () -> Unit,
@@ -207,6 +208,7 @@ fun ProfilePreviewModal(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Nút nhắn tin - luôn giữ nguyên
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -217,7 +219,9 @@ fun ProfilePreviewModal(
                                 listOf(GradientStart, GradientMid, GradientEnd)
                             )
                         )
-                        .clickable { onMessageClick(post.authorId) },
+                        .clickable {
+                            onMessageClick(post.authorId)
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Row(
@@ -229,28 +233,52 @@ fun ProfilePreviewModal(
                             tint = TextPrimary,
                             modifier = Modifier.size(20.dp)
                         )
+
                         Spacer(modifier = Modifier.width(8.dp))
+
                         Text(
                             text = "Nhắn tin",
-                            style = MaterialTheme.typography.labelLarge,
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
                             color = TextPrimary
                         )
                     }
                 }
 
+                // Nút báo cáo người dùng - vẫn hiện, nhưng khóa khi đã report
                 Box(
                     modifier = Modifier
                         .size(52.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(GlassWhite)
-                        .border(1.dp, ErrorRed.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
-                        .clickable { onReportUserClick() },
+                        .border(
+                            width = 1.dp,
+                            color = if (isUserReported) {
+                                GlassBorder
+                            } else {
+                                ErrorRed.copy(alpha = 0.4f)
+                            },
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .clickable(
+                            enabled = !isUserReported,
+                            onClick = onReportUserClick
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Flag,
-                        contentDescription = "Báo cáo người dùng",
-                        tint = ErrorRed,
+                        contentDescription = if (isUserReported) {
+                            "Đã báo cáo người dùng"
+                        } else {
+                            "Báo cáo người dùng"
+                        },
+                        tint = if (isUserReported) {
+                            TextSecondary
+                        } else {
+                            ErrorRed
+                        },
                         modifier = Modifier.size(22.dp)
                     )
                 }

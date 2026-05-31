@@ -20,7 +20,8 @@ interface PostApi {
     @GET("api/posts")
     suspend fun getPosts(
         @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 20
+        @Query("limit") limit: Int = 20,
+        @Query("type") type: String? = null
     ): PostsResponse
 
     @GET("api/posts/{id}")

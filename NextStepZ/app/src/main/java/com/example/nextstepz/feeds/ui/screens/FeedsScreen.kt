@@ -1,47 +1,40 @@
-package com.example.nextstepz.feeds.ui.screens
-
-import androidx.compose.animation.AnimatedContent
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -55,65 +48,68 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextstepz.feeds.data.model.Post
-import com.example.nextstepz.feeds.ui.components.CommentSheet
+import com.example.nextstepz.feeds.data.model.PostType
 import com.example.nextstepz.feeds.ui.components.CreatePostSheet
 import com.example.nextstepz.feeds.ui.components.FeedFilterBar
 import com.example.nextstepz.feeds.ui.components.PostCard
 import com.example.nextstepz.feeds.ui.components.PostInput
-import com.example.nextstepz.feeds.ui.components.ProfilePreviewModal
 import com.example.nextstepz.feeds.ui.components.RefreshHeader
-import com.example.nextstepz.feeds.ui.components.ReportModal
-import com.example.nextstepz.feeds.ui.components.PostMenuSheet
-import com.example.nextstepz.feeds.ui.components.UserReportModal
-import com.example.nextstepz.feeds.data.model.UserReportReason
-import com.example.nextstepz.ui.components.SectionHeader
-import com.example.nextstepz.feeds.ui.viewmodel.CommentSheetState
 import com.example.nextstepz.feeds.ui.viewmodel.FeedsUiState
 import com.example.nextstepz.feeds.ui.viewmodel.FeedsViewModel
-import com.example.nextstepz.feeds.ui.viewmodel.ModalSheetState
+import com.example.nextstepz.ui.components.SectionHeader
 import com.example.nextstepz.ui.theme.DarkBackground
-import com.example.nextstepz.ui.theme.ErrorRed
-import com.example.nextstepz.ui.theme.GlassBorder
 import com.example.nextstepz.ui.theme.GlassWhite
 import com.example.nextstepz.ui.theme.GradientEnd
 import com.example.nextstepz.ui.theme.GradientMid
 import com.example.nextstepz.ui.theme.GradientStart
 import com.example.nextstepz.ui.theme.TextPrimary
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.font.FontWeight
+import com.example.nextstepz.feeds.data.model.Comment
+import com.example.nextstepz.feeds.ui.components.CommentSheet
+import com.example.nextstepz.feeds.ui.components.PostMenuSheet
+import com.example.nextstepz.feeds.ui.components.ProfilePreviewModal
+import com.example.nextstepz.feeds.ui.components.ReportModal
+import com.example.nextstepz.feeds.ui.components.UserReportModal
+import com.example.nextstepz.feeds.ui.viewmodel.CommentSheetState
+import com.example.nextstepz.feeds.ui.viewmodel.ModalSheetState
+import com.example.nextstepz.ui.components.GradientButton
+import com.example.nextstepz.ui.theme.ErrorRed
+import com.example.nextstepz.ui.theme.GlassBorder
+import com.example.nextstepz.ui.theme.InputBackground
+import com.example.nextstepz.ui.theme.InputPlaceholder
 import com.example.nextstepz.ui.theme.TextSecondary
-import kotlinx.coroutines.delay
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
+import com.example.nextstepz.ui.theme.TextTertiary
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedsScreen(
     viewModel: FeedsViewModel = viewModel()
 ) {
-    val context = LocalContext.current
     val uiState by viewModel.uiState
     val isRefreshing by viewModel.isRefreshing
     val selectedFilter by viewModel.selectedFilter
-    val commentSheetState by viewModel.commentSheetState
     val isCreatePostVisible by viewModel.isCreatePostSheetVisible
-    val modalSheetState by viewModel.modalSheetState
-
+    val commentSheetState by viewModel.commentSheetState
+    val commentSheetState2 = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val pullRefreshState = rememberPullToRefreshState()
     val createPostSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val commentSheetState2 = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val modalSheetState by viewModel.modalSheetState
     val modalSheetState2 = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
     var refreshTick by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(isRefreshing) {
@@ -155,51 +151,36 @@ fun FeedsScreen(
                 }
 
                 item {
-                    Column {
-                        AnimatedVisibility(
-                            visible = isRefreshing,
-                            enter = fadeIn(tween(200)),
-                            exit = fadeOut(tween(200))
-                        ) {
-                            RefreshHeader(isRefreshing = true)
-                        }
+                    AnimatedVisibility(
+                        visible = isRefreshing,
+                        enter = fadeIn(tween(200)),
+                        exit = fadeOut(tween(200))
+                    ) {
+                        RefreshHeader(isRefreshing = true)
                     }
                 }
 
                 when (uiState) {
+                    is FeedsUiState.Idle -> {
+                        item {
+                            EmptyState(filter = selectedFilter)
+                        }
+                    }
+
                     is FeedsUiState.Loading -> {
                         item {
-                            AnimatedContent(
-                                targetState = true,
-                                transitionSpec = {
-                                    fadeIn(tween(400)) togetherWith fadeOut(tween(300))
-                                },
-                                label = "loading_transition"
-                            ) {
-                                if (it) {
-                                    LoadingState()
-                                } else {
-                                    EmptyState(filter = selectedFilter)
-                                }
-                            }
+                            LoadingState()
                         }
                     }
 
                     is FeedsUiState.Error -> {
                         item {
-                            AnimatedContent(
-                                targetState = (uiState as FeedsUiState.Error),
-                                transitionSpec = {
-                                    scaleIn(tween(300)) + fadeIn(tween(300)) togetherWith
-                                            scaleOut(tween(200)) + fadeOut(tween(200))
-                                },
-                                label = "error_transition"
-                            ) { error ->
-                                ErrorState(
-                                    message = error.message,
-                                    onRetry = { viewModel.loadPosts() }
-                                )
-                            }
+                            val error = uiState as FeedsUiState.Error
+
+                            ErrorState(
+                                message = error.message,
+                                onRetry = { viewModel.loadPosts() }
+                            )
                         }
                     }
 
@@ -208,15 +189,7 @@ fun FeedsScreen(
 
                         if (posts.isEmpty()) {
                             item {
-                                AnimatedContent(
-                                    targetState = selectedFilter,
-                                    transitionSpec = {
-                                        fadeIn(tween(300)) togetherWith fadeOut(tween(200))
-                                    },
-                                    label = "empty_transition"
-                                ) { filter ->
-                                    EmptyState(filter = filter)
-                                }
+                                EmptyState(filter = selectedFilter)
                             }
                         } else {
                             itemsIndexed(
@@ -227,12 +200,14 @@ fun FeedsScreen(
                                     post = post,
                                     index = index,
                                     refreshTick = refreshTick,
-                                    onLikeClick = { viewModel.toggleLike(post.id) },
-                                    onCommentClick = { viewModel.showCommentSheet(post.id) },
-                                    onBookmarkClick = { viewModel.toggleBookmark(post.id) },
-                                    onAvatarClick = { viewModel.showProfilePreview(post.id) },
-                                    onNameClick = { viewModel.showProfilePreview(post.id) },
-                                    onMenuClick = { viewModel.showPostMenu(post.id) }
+
+                                    // Chưa làm API like/comment/bookmark/report thì để tạm no-op
+                                    onLikeClick = {viewModel.toggleLike(post.id)},
+                                    onCommentClick = { viewModel.showCommentSheet(post.id)},
+                                    onBookmarkClick = {},
+                                    onAvatarClick = {viewModel.showProfilePreview(post.id)},
+                                    onNameClick = {viewModel.showProfilePreview(post.id)},
+                                    onMenuClick = {viewModel.showPostMenu(post.id)}
                                 )
                             }
                         }
@@ -284,7 +259,6 @@ fun FeedsScreen(
                 )
             }
         }
-
         when (val state = commentSheetState) {
             is CommentSheetState.Shown -> {
                 ModalBottomSheet(
@@ -308,6 +282,7 @@ fun FeedsScreen(
                     )
                 }
             }
+
             is CommentSheetState.Loading -> {
                 ModalBottomSheet(
                     onDismissRequest = { viewModel.hideCommentSheet() },
@@ -330,9 +305,9 @@ fun FeedsScreen(
                     }
                 }
             }
-            CommentSheetState.Hidden -> {}
-        }
 
+            CommentSheetState.Hidden -> Unit
+        }
         when (val state = modalSheetState) {
             is ModalSheetState.PostMenu -> {
                 ModalBottomSheet(
@@ -344,27 +319,16 @@ fun FeedsScreen(
                 ) {
                     PostMenuSheet(
                         isReported = state.post.isReported,
-                        onReportClick = { viewModel.showReportModal(state.post.id) },
-                        onDismiss = { viewModel.hideModal() }
-                    )
-                }
-            }
-            is ModalSheetState.Report -> {
-                ModalBottomSheet(
-                    onDismissRequest = { viewModel.hideModal() },
-                    sheetState = modalSheetState2,
-                    containerColor = DarkBackground,
-                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                    dragHandle = null
-                ) {
-                    ReportModal(
-                        onDismiss = { viewModel.hideModal() },
-                        onSubmit = { reason, customText ->
-                            viewModel.reportPost(state.post.id, reason, customText)
+                        onReportClick = {
+                            viewModel.showReportModal(state.post.id)
+                        },
+                        onDismiss = {
+                            viewModel.hideModal()
                         }
                     )
                 }
             }
+
             is ModalSheetState.ProfilePreview -> {
                 ModalBottomSheet(
                     onDismissRequest = { viewModel.hideModal() },
@@ -375,16 +339,20 @@ fun FeedsScreen(
                 ) {
                     ProfilePreviewModal(
                         post = state.post,
+                        isUserReported = state.post.reportedUsers.contains(state.post.authorId),
                         onDismiss = { viewModel.hideModal() },
                         onMessageClick = { authorId ->
                             viewModel.onMessageClick(authorId)
                         },
                         onReportUserClick = {
-                            viewModel.showUserReportModal(state.post)
+                            if (!state.post.reportedUsers.contains(state.post.authorId)) {
+                                viewModel.showUserReportModal(state.post)
+                            }
                         }
                     )
                 }
             }
+
             is ModalSheetState.UserReport -> {
                 ModalBottomSheet(
                     onDismissRequest = { viewModel.hideModal() },
@@ -394,19 +362,47 @@ fun FeedsScreen(
                     dragHandle = null
                 ) {
                     UserReportModal(
+                        isSubmitting = state.isSubmitting,
                         isSubmitted = state.isSubmitted,
+                        errorMessage = state.errorMessage,
+                        onDismiss = { viewModel.hideModal() },
                         onSubmit = { reason, customText ->
-                            viewModel.reportUserWithReason(state.post.authorId, reason, customText)
-                        },
-                        onDismiss = { viewModel.hideModal() }
+                            viewModel.reportUser(
+                                userId = state.post.authorId,
+                                reason = reason,
+                                customText = customText
+                            )
+                        }
                     )
                 }
             }
-            ModalSheetState.Hidden -> {}
+
+            is ModalSheetState.Report -> {
+                ModalBottomSheet(
+                    onDismissRequest = { viewModel.hideModal() },
+                    sheetState = modalSheetState2,
+                    containerColor = DarkBackground,
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                    dragHandle = null
+                ) {
+                    ReportModal(
+                        isSubmitting = state.isSubmitting,
+                        isSubmitted = state.isSubmitted,
+                        errorMessage = state.errorMessage,
+                        onDismiss = { viewModel.hideModal() },
+                        onSubmit = { reason, customText ->
+                            viewModel.reportPost(state.post.id, reason, customText)
+                        }
+                    )
+                }
+            }
+
+            else -> Unit
         }
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun EngagedPostCard(
     post: Post,
@@ -423,8 +419,8 @@ private fun EngagedPostCard(
 
     val entranceDelay = (index * 30).coerceAtMost(250)
 
-    LaunchedEffect(post.id) {
-        delay(entranceDelay.toLong())
+    LaunchedEffect(post.id, refreshTick) {
+        kotlinx.coroutines.delay(entranceDelay.toLong())
         isVisible = true
     }
 
@@ -461,105 +457,6 @@ private fun EngagedPostCard(
 }
 
 @Composable
-private fun LoadingState() {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        repeat(4) {
-            LoadingShimmerCard()
-        }
-    }
-}
-
-@Composable
-private fun LoadingShimmerCard() {
-    val infinite = rememberInfiniteTransition(label = "shimmer")
-    val progress by infinite.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "shimmer_val"
-    )
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(GlassWhite)
-            .padding(20.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            ShimmerBlock(width = 48.dp, height = 48.dp, progress = progress, isCircle = true)
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                ShimmerBlock(width = 130.dp, height = 14.dp, progress = progress)
-                Spacer(modifier = Modifier.height(6.dp))
-                ShimmerBlock(width = 90.dp, height = 10.dp, progress = progress)
-            }
-        }
-        Spacer(modifier = Modifier.height(20.dp))
-        repeat(3) {
-            ShimmerBlock(fillMax = true, height = 12.dp, progress = progress)
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        ShimmerBlock(width = 160.dp, height = 12.dp, progress = progress)
-        Spacer(modifier = Modifier.height(16.dp))
-        ShimmerBlock(fillMax = true, height = 1.dp, progress = progress, isBrand = true)
-    }
-}
-
-@Composable
-private fun ShimmerBlock(
-    width: androidx.compose.ui.unit.Dp? = null,
-    height: androidx.compose.ui.unit.Dp,
-    progress: Float,
-    modifier: Modifier = Modifier,
-    fillMax: Boolean = false,
-    isCircle: Boolean = false,
-    isBrand: Boolean = false
-) {
-    val baseColors = if (isBrand) {
-        listOf(
-            GradientStart.copy(alpha = 0f),
-            GradientMid.copy(alpha = 0.45f),
-            GradientEnd.copy(alpha = 0.3f),
-            GradientMid.copy(alpha = 0.45f),
-            GradientStart.copy(alpha = 0f)
-        )
-    } else {
-        listOf(
-            GlassBorder.copy(alpha = 0.15f),
-            GlassBorder.copy(alpha = 0.45f),
-            GlassBorder.copy(alpha = 0.15f)
-        )
-    }
-
-    Box(
-        modifier = modifier
-            .then(
-                when {
-                    fillMax -> Modifier.fillMaxWidth()
-                    width != null -> Modifier.width(width)
-                    else -> Modifier
-                }
-            )
-            .height(height)
-            .clip(if (isCircle) CircleShape else RoundedCornerShape(6.dp))
-            .background(
-                Brush.horizontalGradient(
-                    colorStops = baseColors.mapIndexed { idx, color ->
-                        val stop = idx.toFloat() / (baseColors.size - 1)
-                        val animatedStop = (stop + progress - 0.5f).coerceIn(0f, 1f)
-                        animatedStop to color
-                    }.toTypedArray()
-                )
-            )
-    )
-}
-
-@Composable
 private fun ErrorState(
     message: String,
     onRetry: () -> Unit
@@ -578,19 +475,25 @@ private fun ErrorState(
             tint = ErrorRed,
             modifier = Modifier.size(48.dp)
         )
+
         Spacer(modifier = Modifier.height(12.dp))
+
         Text(
             text = "Đã xảy ra lỗi",
             style = MaterialTheme.typography.titleMedium,
             color = TextPrimary
         )
+
         Spacer(modifier = Modifier.height(4.dp))
+
         Text(
             text = message,
             style = MaterialTheme.typography.bodySmall,
             color = TextSecondary
         )
+
         Spacer(modifier = Modifier.height(16.dp))
+
         com.example.nextstepz.ui.components.GradientButton(
             text = "Thử lại",
             onClick = onRetry,
@@ -600,12 +503,30 @@ private fun ErrorState(
 }
 
 @Composable
-private fun EmptyState(filter: com.example.nextstepz.feeds.data.model.PostType?) {
+private fun LoadingState() {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        repeat(4) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(GlassWhite)
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyState(filter: PostType?) {
     val filterName = when (filter) {
-        com.example.nextstepz.feeds.data.model.PostType.Article -> "Bài viết"
-        com.example.nextstepz.feeds.data.model.PostType.Job -> "Việc làm"
-        com.example.nextstepz.feeds.data.model.PostType.Tips -> "Mẹo nghề"
-        com.example.nextstepz.feeds.data.model.PostType.Story -> "Chia sẻ"
+        PostType.Article -> "Bài viết"
+        PostType.Job -> "Việc làm"
+        PostType.Tips -> "Mẹo nghề"
+        PostType.Story -> "Chia sẻ"
         null -> "bài viết"
     }
 
@@ -620,7 +541,9 @@ private fun EmptyState(filter: com.example.nextstepz.feeds.data.model.PostType?)
             style = MaterialTheme.typography.titleMedium,
             color = TextSecondary
         )
+
         Spacer(modifier = Modifier.height(8.dp))
+
         Text(
             text = "Hãy là người đầu tiên chia sẻ!",
             style = MaterialTheme.typography.bodySmall,

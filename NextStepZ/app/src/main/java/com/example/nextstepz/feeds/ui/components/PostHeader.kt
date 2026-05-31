@@ -1,5 +1,7 @@
 package com.example.nextstepz.feeds.ui.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -42,6 +44,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PostHeader(
     post: Post,
@@ -142,6 +145,7 @@ fun PostHeader(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 private fun formatTimeAgo(isoDate: String): String {
     return try {
         val instant = Instant.parse(isoDate)

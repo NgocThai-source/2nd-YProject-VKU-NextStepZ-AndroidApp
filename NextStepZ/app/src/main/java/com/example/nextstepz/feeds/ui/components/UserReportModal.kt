@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import com.example.nextstepz.feeds.data.model.UserReportReason
 import com.example.nextstepz.ui.components.GradientButton
 import com.example.nextstepz.ui.theme.DarkBackground
+import com.example.nextstepz.ui.theme.ErrorRed
 import com.example.nextstepz.ui.theme.GlassBorder
 import com.example.nextstepz.ui.theme.GlassWhite
 import com.example.nextstepz.ui.theme.GradientMid
@@ -64,7 +65,9 @@ import com.example.nextstepz.ui.theme.TextTertiary
 
 @Composable
 fun UserReportModal(
+    isSubmitting: Boolean,
     isSubmitted: Boolean,
+    errorMessage: String?,
     onSubmit: (UserReportReason, String) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
@@ -125,6 +128,8 @@ fun UserReportModal(
                     ReportFormContent(
                         selectedReason = selectedReason,
                         customText = customText,
+                        isSubmitting = isSubmitting,
+                        errorMessage = errorMessage,
                         onReasonSelected = { selectedReason = it },
                         onCustomTextChanged = { customText = it },
                         onSubmit = {
@@ -143,6 +148,8 @@ fun UserReportModal(
 private fun ReportFormContent(
     selectedReason: UserReportReason?,
     customText: String,
+    isSubmitting: Boolean,
+    errorMessage: String?,
     onReasonSelected: (UserReportReason) -> Unit,
     onCustomTextChanged: (String) -> Unit,
     onSubmit: () -> Unit
@@ -160,7 +167,7 @@ private fun ReportFormContent(
                 UserReportReasonItem(
                     reason = reason,
                     isSelected = selectedReason == reason,
-                    onClick = { onReasonSelected(reason) }
+                    onClick = { if(!isSubmitting) onReasonSelected(reason) }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -182,11 +189,23 @@ private fun ReportFormContent(
             if (showCustomInput) {
                 CustomReasonInput(
                     value = customText,
-                    onValueChange = onCustomTextChanged
+                    onValueChange = {
+                        if(!isSubmitting) onCustomTextChanged(it)
+                    }
                 )
             } else {
                 Spacer(modifier = Modifier.height(8.dp))
             }
+        }
+
+        if (!errorMessage.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodySmall,
+                color = ErrorRed
+            )
         }
 
         Spacer(modifier = Modifier.height(20.dp))

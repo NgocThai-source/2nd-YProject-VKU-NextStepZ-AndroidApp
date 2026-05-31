@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import com.example.nextstepz.feeds.data.model.ReportReason
 import com.example.nextstepz.ui.components.GradientButton
 import com.example.nextstepz.ui.theme.DarkBackground
+import com.example.nextstepz.ui.theme.ErrorRed
 import com.example.nextstepz.ui.theme.GlassBorder
 import com.example.nextstepz.ui.theme.GlassWhite
 import com.example.nextstepz.ui.theme.GradientMid
@@ -65,13 +66,15 @@ import com.example.nextstepz.ui.theme.TextTertiary
 
 @Composable
 fun ReportModal(
+    isSubmitting: Boolean,
+    isSubmitted: Boolean,
+    errorMessage: String?,
     onDismiss: () -> Unit,
     onSubmit: (ReportReason, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var selectedReason by remember { mutableStateOf<ReportReason?>(null) }
     var customText by remember { mutableStateOf("") }
-    var isSubmitted by remember { mutableStateOf(false) }
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -126,12 +129,13 @@ fun ReportModal(
                     ReportFormContent(
                         selectedReason = selectedReason,
                         customText = customText,
+                        isSubmitting = isSubmitting,
+                        errorMessage = errorMessage,
                         onReasonSelected = { selectedReason = it },
                         onCustomTextChanged = { customText = it },
                         onSubmit = {
                             selectedReason?.let { reason ->
                                 onSubmit(reason, customText)
-                                isSubmitted = true
                             }
                         }
                     )
@@ -145,6 +149,8 @@ fun ReportModal(
 private fun ReportFormContent(
     selectedReason: ReportReason?,
     customText: String,
+    isSubmitting: Boolean,
+    errorMessage: String?,
     onReasonSelected: (ReportReason) -> Unit,
     onCustomTextChanged: (String) -> Unit,
     onSubmit: () -> Unit
@@ -162,7 +168,9 @@ private fun ReportFormContent(
                 ReportReasonItem(
                     reason = reason,
                     isSelected = selectedReason == reason,
-                    onClick = { onReasonSelected(reason) }
+                    onClick = { if(!isSubmitting) {
+                    onReasonSelected(reason)}
+                    }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -184,11 +192,24 @@ private fun ReportFormContent(
             if (showCustomInput) {
                 CustomReasonInput(
                     value = customText,
-                    onValueChange = onCustomTextChanged
+                    onValueChange = {
+                        if(!isSubmitting) {
+                            onCustomTextChanged(it)
+                        }
+                    }
                 )
             } else {
                 Spacer(modifier = Modifier.height(8.dp))
             }
+        }
+        if (!errorMessage.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodySmall,
+                color = ErrorRed
+            )
         }
 
         Spacer(modifier = Modifier.height(20.dp))

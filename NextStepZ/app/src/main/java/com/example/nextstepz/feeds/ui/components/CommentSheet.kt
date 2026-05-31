@@ -1,5 +1,7 @@
 package com.example.nextstepz.feeds.ui.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
@@ -72,6 +74,7 @@ import com.example.nextstepz.ui.theme.TextTertiary
 import java.time.Duration
 import java.time.Instant
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CommentSheet(
     post: Post,
@@ -282,6 +285,7 @@ fun CommentSheet(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun CommentItem(
     comment: Comment,
@@ -433,6 +437,7 @@ private fun CommentLikeButton(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 private fun formatCommentTime(isoDate: String): String {
     return try {
         val instant = Instant.parse(isoDate)
@@ -443,7 +448,7 @@ private fun formatCommentTime(isoDate: String): String {
             duration.toMinutes() < 1 -> "Vừa xong"
             duration.toMinutes() < 60 -> "${duration.toMinutes()}p"
             duration.toHours() < 24 -> "${duration.toHours()}g"
-            duration.toDays() < 7 -> "${duration.toDays()}ngày"
+            duration.toDays() < 7 -> "${duration.toDays()} ngày"
             else -> "${duration.toDays() / 7}t"
         }
     } catch (e: Exception) {

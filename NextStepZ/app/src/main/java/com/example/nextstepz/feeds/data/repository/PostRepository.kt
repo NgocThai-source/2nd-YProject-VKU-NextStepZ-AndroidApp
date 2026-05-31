@@ -1,157 +1,68 @@
 package com.example.nextstepz.feeds.data.repository
 
-import com.example.nextstepz.feeds.data.model.Comment
-import com.example.nextstepz.feeds.data.model.Post
-import com.example.nextstepz.feeds.data.model.PostType
-import com.example.nextstepz.feeds.data.model.ReportReason
-import com.example.nextstepz.feeds.data.model.UserReportReason
-import kotlinx.coroutines.delay
+import android.content.Context
+import com.example.nextstepz.auth.data.remote.RetrofitClientPost
+import com.example.nextstepz.feeds.data.model.CommentResponse
+import com.example.nextstepz.feeds.data.model.CommentsResponse
+import com.example.nextstepz.feeds.data.model.CreateCommentRequest
+import com.example.nextstepz.feeds.data.model.CreatePostRequest
+import com.example.nextstepz.feeds.data.model.InteractionResponse
+import com.example.nextstepz.feeds.data.model.PostResponse
+import com.example.nextstepz.feeds.data.model.PostsResponse
+import com.example.nextstepz.feeds.data.model.ReportRequest
+import com.example.nextstepz.feeds.data.model.UserReportRequest
+import com.example.nextstepz.feeds.data.remote.PostApi
 
-class PostRepository {
-
-    private val mockPosts = MockDataProvider.getMockPosts().toMutableList()
-    private var nextPostId = 11L
-    private var nextCommentId = 100L
-
-    suspend fun getPosts(
-        page: Int = 1,
-        limit: Int = 20,
-        filterType: PostType? = null
-    ): Result<List<Post>> {
-        delay(600)
-        val filtered = if (filterType != null) {
-            mockPosts.filter { it.type == filterType }
-        } else {
-            mockPosts.toList()
-        }
-        return Result.success(filtered)
+class PostRepository(
+    private val context: Context
+) {
+    suspend fun createPost(request: CreatePostRequest): PostResponse {
+        return RetrofitClientPost.getApiInterface(context).createPost(request)
     }
 
-    suspend fun getPostById(id: String): Result<Post?> {
-        delay(300)
-        return Result.success(mockPosts.find { it.id == id })
+    suspend fun getPosts(page: Int = 1, limit: Int = 20, type: String? = null): PostsResponse {
+        return RetrofitClientPost.getApiInterface(context).getPosts(page = page, limit = limit, type = type)
     }
 
-    suspend fun toggleLike(postId: String): Result<Post> {
-        delay(200)
-        val index = mockPosts.indexOfFirst { it.id == postId }
-        if (index == -1) return Result.failure(Exception("Post not found"))
-
-        val post = mockPosts[index]
-        val updatedPost = post.copy(
-            isLiked = !post.isLiked,
-            likeCount = if (post.isLiked) post.likeCount - 1 else post.likeCount + 1
-        )
-        mockPosts[index] = updatedPost
-        return Result.success(updatedPost)
+    suspend fun addComments(postId: String, request: CreateCommentRequest): CommentResponse {
+        return RetrofitClientPost.getApiInterface(context).addComment(postId, request)
+    }
+    suspend fun getComments(postId: String): CommentsResponse {
+        return RetrofitClientPost.getApiInterface(context).getComments(postId)
     }
 
-    suspend fun toggleBookmark(postId: String): Result<Post> {
-        delay(200)
-        val index = mockPosts.indexOfFirst { it.id == postId }
-        if (index == -1) return Result.failure(Exception("Post not found"))
-
-        val post = mockPosts[index]
-        val updatedPost = post.copy(isBookmarked = !post.isBookmarked)
-        mockPosts[index] = updatedPost
-        return Result.success(updatedPost)
+    suspend fun likeComment(postId: String, commentId: String): InteractionResponse {
+        return RetrofitClientPost.getApiInterface(context).likeComment(postId, commentId)
     }
 
-    suspend fun reportPost(postId: String, reason: ReportReason, customText: String = ""): Result<Post> {
-        delay(500)
-        val index = mockPosts.indexOfFirst { it.id == postId }
-        if (index == -1) return Result.failure(Exception("Post not found"))
-
-        val post = mockPosts[index]
-        val updatedPost = post.copy(isReported = true)
-        mockPosts[index] = updatedPost
-        return Result.success(updatedPost)
+    suspend fun unlikeComment(postId: String, commentId: String): InteractionResponse {
+        return RetrofitClientPost.getApiInterface(context).unlikeComment(postId, commentId)
     }
 
-    suspend fun reportUser(authorId: String, reason: UserReportReason, customText: String = ""): Result<Unit> {
-        delay(500)
-        val postIndex = mockPosts.indexOfFirst { it.authorId == authorId }
-        if (postIndex != -1) {
-            val post = mockPosts[postIndex]
-            mockPosts[postIndex] = post.copy(reportedUsers = post.reportedUsers + authorId)
-        }
-        return Result.success(Unit)
+    suspend fun likePost(postId: String): InteractionResponse {
+        return RetrofitClientPost.getApiInterface(context).likePost(postId)
     }
-
-    suspend fun toggleCommentLike(postId: String, commentId: String): Result<Post> {
-        delay(200)
-        val index = mockPosts.indexOfFirst { it.id == postId }
-        if (index == -1) return Result.failure(Exception("Post not found"))
-
-        val post = mockPosts[index]
-        val updatedComments = post.comments.map { comment ->
-            if (comment.id == commentId) {
-                comment.copy(
-                    isLiked = !comment.isLiked,
-                    likeCount = if (comment.isLiked) comment.likeCount - 1 else comment.likeCount + 1
-                )
-            } else comment
-        }
-        val updatedPost = post.copy(comments = updatedComments)
-        mockPosts[index] = updatedPost
-        return Result.success(updatedPost)
+    suspend fun unlikePost(postId: String): InteractionResponse {
+        return RetrofitClientPost.getApiInterface(context).unlikePost(postId)
     }
-
-    suspend fun getComments(postId: String): Result<List<Comment>> {
-        delay(500)
-        val post = mockPosts.find { it.id == postId }
-        return Result.success(post?.comments ?: emptyList())
+    suspend fun reportPost(postId: String, request: ReportRequest) : InteractionResponse {
+        return RetrofitClientPost.getApiInterface(context).reportPost(postId, request)
     }
-
-    suspend fun addComment(postId: String, content: String): Result<Comment> {
-        delay(400)
-        val index = mockPosts.indexOfFirst { it.id == postId }
-        if (index == -1) return Result.failure(Exception("Post not found"))
-
-        val newComment = Comment(
-            id = "c_${nextCommentId++}",
-            authorName = "Bạn",
-            authorAvatar = null,
-            content = content,
-            createdAt = "2026-05-22T04:00:00Z",
-            likeCount = 0,
-            isLiked = false
-        )
-
-        val post = mockPosts[index]
-        val updatedComments = listOf(newComment) + post.comments
-        val updatedPost = post.copy(
-            comments = updatedComments,
-            commentCount = updatedComments.size
-        )
-        mockPosts[index] = updatedPost
-        return Result.success(newComment)
-    }
-
-    suspend fun createPost(
-        content: String,
-        type: PostType,
-        skillTags: List<String>
-    ): Result<Post> {
-        delay(600)
-        val newPost = Post(
-            id = "post_${nextPostId++}",
-            authorId = "current_user",
-            authorName = "Bạn",
-            authorAvatar = null,
-            authorRole = "Sinh viên CNTT - VKU",
-            type = type,
-            content = content,
-            images = emptyList(),
-            skillTags = skillTags,
-            likeCount = 0,
-            commentCount = 0,
-            isLiked = false,
-            isBookmarked = false,
-            createdAt = "2026-05-22T04:00:00Z",
-            comments = emptyList()
-        )
-        mockPosts.add(0, newPost)
-        return Result.success(newPost)
+    suspend fun reportUser(userId: String, request: UserReportRequest) : InteractionResponse {
+        return RetrofitClientPost.getApiInterface(context).reportUser(userId, request)
     }
 }
+
+//    suspend fun getPostById(id: String): Result<Post?> {
+//        return try {
+//            val response = postApi.getPostById(id)
+//
+//            if (response.success) {
+//                Result.success(response.post)
+//            } else {
+//                Result.failure(Exception(response.message))
+//            }
+//        } catch (e: Exception) {
+//            Result.failure(e)
+//        }
+//    }

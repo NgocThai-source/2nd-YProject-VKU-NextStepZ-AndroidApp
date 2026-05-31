@@ -2,22 +2,22 @@ package com.example.nextstepz.auth.data.remote
 
 import AuthInterceptor
 import android.content.Context
-import com.example.nextstepz.auth.data.remote.AuthApi
+import com.example.nextstepz.feeds.data.remote.PostApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object RetrofitClient {
+object RetrofitClientPost {
     private const val BASE_URL = "http://10.0.2.2:5000/"
 
     // Biến lưu trữ Singleton để không phải tạo lại nhiều lần
     @Volatile
-    private var instance: AuthApi? = null
+    private var instance: PostApi? = null
 
 
     // Đổi thành hàm nhận Context
-    fun getApiInterface(context: Context): AuthApi {
+    fun getApiInterface(context: Context): PostApi {
         return instance ?: synchronized(this) {
 
             val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -28,6 +28,7 @@ object RetrofitClient {
             // Lưu ý: Dùng context.applicationContext để tránh rò rỉ bộ nhớ (Memory Leak)
             val okHttpClient = OkHttpClient.Builder()
                 .addInterceptor(AuthInterceptor(context.applicationContext))
+                .addInterceptor(loggingInterceptor)
                 .build()
 
             // 2. Khởi tạo Retrofit và gắn cái OkHttpClient vừa tạo ở trên vào
@@ -38,7 +39,7 @@ object RetrofitClient {
                 .build()
 
             // 3. Tạo ApiInterface và gán vào biến instance
-            retrofit.create(AuthApi::class.java).also { instance = it }
+            retrofit.create(PostApi::class.java).also { instance = it }
         }
     }
 }

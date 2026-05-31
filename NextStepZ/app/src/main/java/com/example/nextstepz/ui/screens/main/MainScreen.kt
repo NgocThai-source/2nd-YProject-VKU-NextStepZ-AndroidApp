@@ -1,5 +1,6 @@
 package com.example.nextstepz.ui.screens.main
 
+import FeedsScreen
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -25,7 +26,6 @@ import com.example.nextstepz.ui.navigation.Screen
 import com.example.nextstepz.ui.navigation.bottomNavItems
 import com.example.nextstepz.ui.navigation.BottomNavItem
 import com.example.nextstepz.ui.screens.home.HomeScreen
-import com.example.nextstepz.feeds.ui.screens.FeedsScreen
 import com.example.nextstepz.feeds.jobs.ui.screens.JobsScreen
 
 private const val TAB_TRANSITION = 300

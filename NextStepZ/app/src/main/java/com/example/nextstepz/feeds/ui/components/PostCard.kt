@@ -1,5 +1,7 @@
 package com.example.nextstepz.feeds.ui.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -29,6 +31,7 @@ import com.example.nextstepz.ui.theme.GradientEnd
 import com.example.nextstepz.ui.theme.GradientMid
 import com.example.nextstepz.ui.theme.GradientStart
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PostCard(
     post: Post,
