@@ -44,7 +44,7 @@ class FeedsViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
-    private val postRepository = PostRepository(application.applicationContext)
+    private val postRepository = PostRepository(application)
 
     private val _uiState = mutableStateOf<FeedsUiState>(FeedsUiState.Idle)
     val uiState: State<FeedsUiState> = _uiState

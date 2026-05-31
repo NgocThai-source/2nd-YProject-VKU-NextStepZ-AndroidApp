@@ -9,17 +9,16 @@ import com.example.nextstepz.auth.data.model.RegisterRequest
 import com.example.nextstepz.auth.data.model.RegisterResponse
 import com.example.nextstepz.auth.data.model.ResetPasswordRequest
 import com.example.nextstepz.auth.data.model.VerifyOtpRequest
-import com.example.nextstepz.auth.data.remote.RetrofitClient
-import com.example.nextstepz.auth.data.remote.RetrofitClientPost
+import com.example.nextstepz.auth.data.remote.RetrofitClientAuth
 
 
 class AuthRepository(private  val context: Context) {
     suspend fun register(request: RegisterRequest): RegisterResponse {
-        return RetrofitClient.getApiInterface(context).register(request)
+        return RetrofitClientAuth.getApiInterface(context).register(request)
     }
     suspend fun login(request: LoginRequest): LoginResponse {
 
-        val response = RetrofitClient.getApiInterface(context).login(request)
+        val response = RetrofitClientAuth.getApiInterface(context).login(request)
         if(response.success && !response.token.isNullOrEmpty()){
             val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
             sharedPreferences.edit().putString("ACCESS_TOKEN", response.token).apply()
@@ -27,14 +26,14 @@ class AuthRepository(private  val context: Context) {
         return response
     }
     suspend fun forgotPassword(request: ForgotPasswordRequest): ForgotPasswordResponse {
-        return RetrofitClient.getApiInterface(context).forgotPassword(request)
+        return RetrofitClientAuth.getApiInterface(context).forgotPassword(request)
     }
 
     suspend fun verifyOtp(request: VerifyOtpRequest): ForgotPasswordResponse {
-        return RetrofitClient.getApiInterface(context).verifyOtp(request)
+        return RetrofitClientAuth.getApiInterface(context).verifyOtp(request)
     }
 
     suspend fun resetPassword(request: ResetPasswordRequest): ForgotPasswordResponse {
-        return RetrofitClient.getApiInterface(context).ResetPassword(request)
+        return RetrofitClientAuth.getApiInterface(context).ResetPassword(request)
     }
 }

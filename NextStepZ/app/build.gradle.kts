@@ -52,10 +52,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.compose.foundation.layout)
-    implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.ui.graphics)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -65,6 +61,11 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    // Thư viện Socket.IO Client cho Android
+    implementation("io.socket:socket.io-client:2.1.0")
+
+    // Thư viện Gson để hỗ trợ parse JSON (rất cần khi gửi/nhận data với backend)
+    implementation("com.google.code.gson:gson:2.10.1")
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     implementation(libs.coil.compose)
 }

@@ -2,13 +2,12 @@ package com.example.nextstepz.auth.data.remote
 
 import AuthInterceptor
 import android.content.Context
-import com.example.nextstepz.auth.data.remote.AuthApi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object RetrofitClient {
+object RetrofitClientAuth {
     private const val BASE_URL = "http://10.0.2.2:5000/"
 
     // Biến lưu trữ Singleton để không phải tạo lại nhiều lần
