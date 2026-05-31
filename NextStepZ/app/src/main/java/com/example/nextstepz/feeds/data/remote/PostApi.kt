@@ -1,5 +1,6 @@
 package com.example.nextstepz.feeds.data.remote
 
+import com.example.nextstepz.feeds.data.model.BookmarkedPostsResponse
 import com.example.nextstepz.feeds.data.model.CommentResponse
 import com.example.nextstepz.feeds.data.model.CommentsResponse
 import com.example.nextstepz.feeds.data.model.CreateCommentRequest
@@ -21,7 +22,8 @@ interface PostApi {
     suspend fun getPosts(
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20,
-        @Query("type") type: String? = null
+        @Query("type") type: String? = null,
+        @Query("bookmarkedOnly") bookmarkedOnly: Boolean = false
     ): PostsResponse
 
     @GET("api/posts/{id}")
@@ -41,7 +43,6 @@ interface PostApi {
 
     @DELETE("api/posts/{id}/bookmark")
     suspend fun unbookmarkPost(@Path("id") id: String): InteractionResponse
-
     @GET("api/posts/{id}/comments")
     suspend fun getComments(@Path("id") id: String): CommentsResponse
 

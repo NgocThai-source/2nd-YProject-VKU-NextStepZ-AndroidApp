@@ -81,6 +81,10 @@ fun FavoritesScreen(
     val selectedTab by viewModel.selectedTab.collectAsState()
 
     val pullRefreshState = rememberPullToRefreshState()
+    LaunchedEffect(Unit) {
+        viewModel.loadData()
+    }
+
     var refreshTick by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(isRefreshing) {

@@ -204,7 +204,7 @@ fun FeedsScreen(
                                     // Chưa làm API like/comment/bookmark/report thì để tạm no-op
                                     onLikeClick = {viewModel.toggleLike(post.id)},
                                     onCommentClick = { viewModel.showCommentSheet(post.id)},
-                                    onBookmarkClick = {},
+                                    onBookmarkClick = {viewModel.toggleBookmark(post.id)},
                                     onAvatarClick = {viewModel.showProfilePreview(post.id)},
                                     onNameClick = {viewModel.showProfilePreview(post.id)},
                                     onMenuClick = {viewModel.showPostMenu(post.id)}

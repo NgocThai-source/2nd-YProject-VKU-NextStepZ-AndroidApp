@@ -25,9 +25,15 @@ data class CommentResponse(
     val comment: Comment?
 )
 
+data class BookmarkedPostsResponse(
+    val success: Boolean,
+    val message: String,
+    val posts: List<Post>
+)
 data class InteractionResponse(
     val success: Boolean,
     val message: String,
     val isLiked: Boolean? = null,
+    val isBookmarked: Boolean? = null,
     val likeCount: Int? = null
 )

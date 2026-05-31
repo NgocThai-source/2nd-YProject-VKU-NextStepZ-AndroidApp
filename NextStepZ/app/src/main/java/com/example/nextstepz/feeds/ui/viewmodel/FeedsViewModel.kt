@@ -69,6 +69,7 @@ class FeedsViewModel(
 
     private val processingCommentLikeIds = mutableSetOf<String>()
 
+    private val processingBookmarkPostIds = mutableSetOf<String>()
     init {
         loadPosts()
     }
@@ -372,6 +373,34 @@ class FeedsViewModel(
                 println("Like comment error: ${getErrorMessage(e)}")
             } finally {
                 processingCommentLikeIds.remove(actionKey)
+            }
+        }
+    }
+
+    fun toggleBookmark(postId: String) {
+        if(!processingBookmarkPostIds.add(postId)) return
+
+        val currentPost = _posts.value.find { it.id == postId } ?: run {
+            processingBookmarkPostIds.remove(postId)
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val response  = if (currentPost.isBookmarked) {
+                    postRepository.unbookmarkPost(postId)
+                }else {
+                    postRepository.bookmarkPost(postId)
+                }
+                if(response.success) {
+                    val updatedPost = currentPost.copy(isBookmarked = response.isBookmarked ?: !currentPost.isBookmarked)
+                    val updatedPosts = _posts.value.map {
+                        post -> if(post.id == postId) updatedPost else post
+                    }
+                    _posts.value = updatedPosts
+                    _uiState.value = FeedsUiState.Success(updatedPosts)
+                }
+            }catch (e: Exception) {
+                processingBookmarkPostIds.remove(postId)
             }
         }
     }

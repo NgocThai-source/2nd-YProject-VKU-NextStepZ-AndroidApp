@@ -2,6 +2,7 @@ package com.example.nextstepz.feeds.data.repository
 
 import android.content.Context
 import com.example.nextstepz.auth.data.remote.RetrofitClientPost
+import com.example.nextstepz.feeds.data.model.BookmarkedPostsResponse
 import com.example.nextstepz.feeds.data.model.CommentResponse
 import com.example.nextstepz.feeds.data.model.CommentsResponse
 import com.example.nextstepz.feeds.data.model.CreateCommentRequest
@@ -20,8 +21,8 @@ class PostRepository(
         return RetrofitClientPost.getApiInterface(context).createPost(request)
     }
 
-    suspend fun getPosts(page: Int = 1, limit: Int = 20, type: String? = null): PostsResponse {
-        return RetrofitClientPost.getApiInterface(context).getPosts(page = page, limit = limit, type = type)
+    suspend fun getPosts(page: Int = 1, limit: Int = 20, type: String? = null, bookmarkedOnly: Boolean = false): PostsResponse {
+        return RetrofitClientPost.getApiInterface(context).getPosts(page = page, limit = limit, type = type, bookmarkedOnly = bookmarkedOnly)
     }
 
     suspend fun addComments(postId: String, request: CreateCommentRequest): CommentResponse {
@@ -50,6 +51,13 @@ class PostRepository(
     }
     suspend fun reportUser(userId: String, request: UserReportRequest) : InteractionResponse {
         return RetrofitClientPost.getApiInterface(context).reportUser(userId, request)
+    }
+
+    suspend fun bookmarkPost(postId: String): InteractionResponse {
+        return RetrofitClientPost.getApiInterface(context).bookmarkPost(postId)
+    }
+    suspend fun unbookmarkPost(postId: String): InteractionResponse {
+        return RetrofitClientPost.getApiInterface(context).unbookmarkPost(postId)
     }
 }
 
