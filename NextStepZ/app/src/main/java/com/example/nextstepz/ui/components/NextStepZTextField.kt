@@ -20,7 +20,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,11 +38,6 @@ import com.example.nextstepz.ui.theme.InputBorderFocused
 import com.example.nextstepz.ui.theme.InputPlaceholder
 import com.example.nextstepz.ui.theme.TextPrimary
 
-/**
- * Custom styled text field with glassmorphism aesthetics.
- * Features animated focus border, leading icon, optional trailing icon,
- * and a label above the field.
- */
 @Composable
 fun NextStepZTextField(
     value: String,
@@ -59,6 +53,8 @@ fun NextStepZTextField(
     isError: Boolean = false,
     errorMessage: String? = null,
     singleLine: Boolean = true,
+    enabled: Boolean = true,
+    readOnly: Boolean = false
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -74,7 +70,6 @@ fun NextStepZTextField(
     )
 
     Column(modifier = modifier.fillMaxWidth()) {
-        // Label
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
@@ -82,13 +77,14 @@ fun NextStepZTextField(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        // Input field
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             textStyle = MaterialTheme.typography.bodyLarge.copy(color = TextPrimary),
             singleLine = singleLine,
+            enabled = enabled,
+            readOnly = readOnly,
             visualTransformation = visualTransformation,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
@@ -99,7 +95,7 @@ fun NextStepZTextField(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(InputBackground)
+                        .background(if (enabled) InputBackground else InputBackground.copy(alpha = 0.5f))
                         .border(
                             width = 1.5.dp,
                             color = borderColor,
@@ -111,7 +107,6 @@ fun NextStepZTextField(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        // Leading icon
                         if (leadingIcon != null) {
                             Icon(
                                 imageVector = leadingIcon,
@@ -122,7 +117,6 @@ fun NextStepZTextField(
                             Spacer(modifier = Modifier.width(12.dp))
                         }
 
-                        // Text field content
                         Box(modifier = Modifier.weight(1f)) {
                             if (value.isEmpty()) {
                                 Text(
@@ -134,7 +128,6 @@ fun NextStepZTextField(
                             innerTextField()
                         }
 
-                        // Trailing icon
                         if (trailingIcon != null) {
                             Spacer(modifier = Modifier.width(8.dp))
                             trailingIcon()
@@ -144,7 +137,6 @@ fun NextStepZTextField(
             }
         )
 
-        // Error message
         if (isError && errorMessage != null) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(

@@ -23,26 +23,18 @@ import com.example.nextstepz.ui.screens.main.MainScreen
 
 private const val TRANSITION_DURATION = 350
 
-/**
- * Main navigation graph for the app.
- * Background is rendered once at this level so transitions between screens
- * never show a gap/flash. Only the foreground content animates.
- */
 @Composable
 fun NextStepZNavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Login.route
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // ─── Persistent background — never re-created during transitions ───
         AnimatedGradientBackground()
 
-        // ─── Navigation with crossfade (no slide = no gap) ─────────────
         NavHost(
             navController = navController,
             startDestination = startDestination,
         ) {
-            // ─── Login Screen ───────────────────────────────────────
             composable(
                 route = Screen.Login.route,
                 enterTransition = {
@@ -55,7 +47,6 @@ fun NextStepZNavGraph(
                     fadeIn(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
                 },
                 popExitTransition = {
-
                     fadeOut(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
                 }
             ) {
@@ -80,7 +71,6 @@ fun NextStepZNavGraph(
                 )
             }
 
-            // ─── Register Screen ────────────────────────────────────
             composable(
                 route = Screen.Register.route,
                 enterTransition = {
@@ -106,7 +96,6 @@ fun NextStepZNavGraph(
                 )
             }
 
-            // ─── Forgot Password Screen ─────────────────────────────
             composable(
                 route = Screen.ForgotPassword.route,
                 enterTransition = {
@@ -133,7 +122,7 @@ fun NextStepZNavGraph(
                     }
                 )
             }
-            // ─── OTP Verification Screen ────────────────────────────
+
             composable(
                 route = Screen.OtpVerification.route,
                 arguments = listOf(
@@ -163,7 +152,6 @@ fun NextStepZNavGraph(
                     },
                     onNavigateToNewPassword = { verifiedEmail ->
                         navController.navigate(Screen.NewPassword.createRoute(verifiedEmail)) {
-                            // Pop OTP + ForgotPassword from back stack
                             popUpTo(Screen.ForgotPassword.route) { inclusive = true }
                             launchSingleTop = true
                         }
@@ -176,7 +164,7 @@ fun NextStepZNavGraph(
                     }
                 )
             }
-            // ─── New Password Screen ────────────────────────────────
+
             composable(
                 route = Screen.NewPassword.route,
                 arguments = listOf(
@@ -212,6 +200,7 @@ fun NextStepZNavGraph(
                     }
                 )
             }
+
             composable(
                 route = Screen.Main.route,
                 enterTransition = {
@@ -221,7 +210,14 @@ fun NextStepZNavGraph(
                     fadeOut(animationSpec = tween(TRANSITION_DURATION, easing = FastOutSlowInEasing))
                 }
             ){
-                MainScreen()
+                MainScreen(
+                    onLogout = {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.Main.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
             }
         }
     }

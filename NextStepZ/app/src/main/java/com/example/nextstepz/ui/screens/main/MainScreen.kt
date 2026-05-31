@@ -22,28 +22,24 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.nextstepz.ui.components.BottomNavBar
+import com.example.nextstepz.ui.navigation.BottomNavItem
 import com.example.nextstepz.ui.navigation.Screen
 import com.example.nextstepz.ui.navigation.bottomNavItems
-import com.example.nextstepz.ui.navigation.BottomNavItem
+import com.example.nextstepz.ui.screens.account.AccountScreen
 import com.example.nextstepz.ui.screens.home.HomeScreen
 import com.example.nextstepz.feeds.jobs.ui.screens.JobsScreen
 
 private const val TAB_TRANSITION = 300
 
-/**
- * Main screen container with bottom navigation bar and animated gradient background.
- * Houses the inner NavHost for tab-based navigation (Home, CV, Jobs, Articles, Account).
- */
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    onLogout: () -> Unit = {}
+) {
     val innerNavController = rememberNavController()
     var currentRoute by rememberSaveable { mutableStateOf(Screen.Home.route) }
 
     Box(modifier = Modifier.fillMaxSize()) {
-
-        // Content + bottom nav
         Column(modifier = Modifier.fillMaxSize()) {
-            // Tab content area
             Box(modifier = Modifier.weight(1f)) {
                 NavHost(
                     navController = innerNavController,
@@ -75,12 +71,15 @@ fun MainScreen() {
                         PlaceholderScreen("Tin Nhắn", Icons.AutoMirrored.Outlined.Chat)
                     }
                     composable(Screen.Account.route) {
-                        PlaceholderScreen("Tài khoản", Icons.Outlined.Person)
+                        AccountScreen(
+                            onLogout = onLogout,
+                            currentRole = com.example.nextstepz.auth.data.model.UserRole.GUEST,
+                            onRoleUpdated = { }
+                        )
                     }
                 }
             }
 
-            // Bottom navigation bar
             BottomNavBar(
                 items = bottomNavItems,
                 currentRoute = currentRoute,
