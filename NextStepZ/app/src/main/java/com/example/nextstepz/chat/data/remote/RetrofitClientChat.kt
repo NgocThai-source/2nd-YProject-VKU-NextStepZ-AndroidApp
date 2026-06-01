@@ -1,4 +1,3 @@
-package com.example.nextstepz.auth.data.remote
 
 import AuthInterceptor
 import android.content.Context
@@ -13,12 +12,9 @@ object RetrofitClientChat {
 
     // Biến lưu trữ Singleton để không phải tạo lại nhiều lần
     @Volatile
-    private var instance: ChatApi? = null
-
-
-    // Đổi thành hàm nhận Context
-    fun getApiInterface(context: Context): ChatApi {
-        return instance ?: synchronized(this) {
+    private var instanceChatApi: ChatApi? = null
+    fun getChatApiInterface(context: Context): ChatApi {
+        return instanceChatApi ?: synchronized(this) {
 
             val loggingInterceptor = HttpLoggingInterceptor().apply {
                 // LEVEL.BODY sẽ in ra TẤT CẢ mọi thứ: Headers (chứa Token) và Body (chứa data)
@@ -39,7 +35,7 @@ object RetrofitClientChat {
                 .build()
 
             // 3. Tạo ApiInterface và gán vào biến instance
-            retrofit.create(ChatApi::class.java).also { instance = it }
+            retrofit.create(ChatApi::class.java).also { instanceChatApi = it }
         }
     }
 }

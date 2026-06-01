@@ -12,12 +12,12 @@ object RetrofitClientAuth {
 
     // Biến lưu trữ Singleton để không phải tạo lại nhiều lần
     @Volatile
-    private var instance: AuthApi? = null
+    private var instanceAuthApi: AuthApi? = null
 
 
     // Đổi thành hàm nhận Context
-    fun getApiInterface(context: Context): AuthApi {
-        return instance ?: synchronized(this) {
+    fun getAuthApiInterface(context: Context): AuthApi {
+        return instanceAuthApi ?: synchronized(this) {
 
             val loggingInterceptor = HttpLoggingInterceptor().apply {
                 // LEVEL.BODY sẽ in ra TẤT CẢ mọi thứ: Headers (chứa Token) và Body (chứa data)
@@ -38,7 +38,9 @@ object RetrofitClientAuth {
                 .build()
 
             // 3. Tạo ApiInterface và gán vào biến instance
-            retrofit.create(AuthApi::class.java).also { instance = it }
+            retrofit.create(AuthApi::class.java).also { instanceAuthApi = it }
         }
     }
 }
+
+

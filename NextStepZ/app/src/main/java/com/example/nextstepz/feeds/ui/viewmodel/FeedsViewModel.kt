@@ -564,9 +564,6 @@ class FeedsViewModel(
         _modalSheetState.value = ModalSheetState.Hidden
     }
 
-    fun onMessageClick(authorId: String) {
-        hideModal()
-    }
 
     fun showUserReportModal(post: Post) {
         _modalSheetState.value = ModalSheetState.UserReport(post)

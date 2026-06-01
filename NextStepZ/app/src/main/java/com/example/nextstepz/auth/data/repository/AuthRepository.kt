@@ -14,26 +14,27 @@ import com.example.nextstepz.auth.data.remote.RetrofitClientAuth
 
 class AuthRepository(private  val context: Context) {
     suspend fun register(request: RegisterRequest): RegisterResponse {
-        return RetrofitClientAuth.getApiInterface(context).register(request)
+        return RetrofitClientAuth.getAuthApiInterface(context).register(request)
     }
     suspend fun login(request: LoginRequest): LoginResponse {
 
-        val response = RetrofitClientAuth.getApiInterface(context).login(request)
+        val response = RetrofitClientAuth.getAuthApiInterface(context).login(request)
         if(response.success && !response.token.isNullOrEmpty()){
             val sharedPreferences = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
             sharedPreferences.edit().putString("ACCESS_TOKEN", response.token).apply()
+            sharedPreferences.edit().putString("USER_ID", response.userData?.userId).apply()
         }
         return response
     }
     suspend fun forgotPassword(request: ForgotPasswordRequest): ForgotPasswordResponse {
-        return RetrofitClientAuth.getApiInterface(context).forgotPassword(request)
+        return RetrofitClientAuth.getAuthApiInterface(context).forgotPassword(request)
     }
 
     suspend fun verifyOtp(request: VerifyOtpRequest): ForgotPasswordResponse {
-        return RetrofitClientAuth.getApiInterface(context).verifyOtp(request)
+        return RetrofitClientAuth.getAuthApiInterface(context).verifyOtp(request)
     }
 
     suspend fun resetPassword(request: ResetPasswordRequest): ForgotPasswordResponse {
-        return RetrofitClientAuth.getApiInterface(context).ResetPassword(request)
+        return RetrofitClientAuth.getAuthApiInterface(context).ResetPassword(request)
     }
 }

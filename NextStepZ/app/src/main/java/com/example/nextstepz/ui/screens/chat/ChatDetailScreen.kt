@@ -1,5 +1,7 @@
 package com.example.nextstepz.ui.screens.chat
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -57,6 +60,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.nextstepz.chat.data.model.ChatMessageUi
 import com.example.nextstepz.ui.theme.DarkSurfaceVariant
 import com.example.nextstepz.ui.theme.GlassBorder
 import com.example.nextstepz.ui.theme.GlassWhite
@@ -75,6 +79,7 @@ import com.example.nextstepz.ui.theme.TextSecondary
 import com.example.nextstepz.ui.theme.TextTertiary
 import kotlinx.coroutines.delay
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ChatDetailScreen(
     conversationId: String,
@@ -130,7 +135,7 @@ fun ChatDetailContent(
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
+            listState.animateScrollToItem(0) // Đổi từ (messages.size - 1) thành 0
         }
     }
 
@@ -143,6 +148,7 @@ fun ChatDetailContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .imePadding()
             .navigationBarsPadding()
     ) {
@@ -158,9 +164,10 @@ fun ChatDetailContent(
 
         AnimatedVisibility(
             visible = contentVisible,
+            modifier = Modifier.weight(1f),
             enter = fadeIn()
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 when (messagesState) {
                     is ChatUiState.Loading -> {
                         Box(
@@ -209,12 +216,11 @@ fun ChatDetailContent(
                                 )
                             }
                         } else {
-                            val reversedMessages = messages.reversed()
 
                             LazyColumn(
                                 state = listState,
                                 modifier = Modifier.fillMaxSize(),
-                                reverseLayout = false,
+                                reverseLayout = true,
                                 contentPadding = androidx.compose.foundation.layout.PaddingValues(
                                     horizontal = 16.dp,
                                     vertical = 12.dp
@@ -222,7 +228,7 @@ fun ChatDetailContent(
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 items(
-                                    items = reversedMessages,
+                                    items = messages,
                                     key = { it.id }
                                 ) { message ->
                                     MessageBubbleItem(

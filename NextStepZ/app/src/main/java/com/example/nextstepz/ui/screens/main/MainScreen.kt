@@ -1,7 +1,9 @@
 package com.example.nextstepz.ui.screens.main
 
 import FeedsScreen
+import android.content.Context
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -11,68 +13,61 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Work
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.nextstepz.feeds.jobs.ui.screens.JobsScreen
 import com.example.nextstepz.ui.components.BottomNavBar
 import com.example.nextstepz.ui.navigation.Screen
 import com.example.nextstepz.ui.navigation.bottomNavItems
+import com.example.nextstepz.ui.navigation.BottomNavItem
 import com.example.nextstepz.ui.screens.account.AccountScreen
 import com.example.nextstepz.ui.screens.chat.ChatDetailScreen
 import com.example.nextstepz.ui.screens.chat.ChatListScreen
 import com.example.nextstepz.ui.screens.chat.ChatViewModel
 import com.example.nextstepz.ui.screens.home.HomeScreen
-import com.example.nextstepz.feeds.jobs.ui.screens.JobsScreen
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
 private const val TAB_TRANSITION = 300
-
-/**
- * Main screen container with bottom navigation bar and animated gradient background.
- * Houses the inner NavHost for tab-based navigation (Home, CV, Jobs, Articles, Account).
- */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun MainScreen(onLogout: () -> Unit = {}) {
+fun MainScreen(
+    onLogout: () -> Unit = {},
+    // 1. THÊM HÀM NÀY ĐỂ BẮN SỰ KIỆN RA ROOT NAVGRAPH
+    onNavigateToChatDetail: (conversationId: String, partnerName: String, partnerId: String) -> Unit
+) {
     val innerNavController = rememberNavController()
     val chatViewModel: ChatViewModel = viewModel()
-
-    var currentRoute by remember { mutableStateOf(Screen.Home.route) }
+    val navBackStackEntry by innerNavController.currentBackStackEntryAsState()
+    var currentRoute = navBackStackEntry?.destination?.route ?: Screen.Home.route
 
     Box(modifier = Modifier.fillMaxSize()) {
-
-        // Content + bottom nav
         Column(modifier = Modifier.fillMaxSize()) {
-            // Tab content area
             Box(modifier = Modifier.weight(1f)) {
                 NavHost(
                     navController = innerNavController,
                     startDestination = Screen.Home.route,
-                    enterTransition = {
-                        fadeIn(tween(TAB_TRANSITION, easing = FastOutSlowInEasing))
-                    },
-                    exitTransition = {
-                        fadeOut(tween(TAB_TRANSITION, easing = FastOutSlowInEasing))
-                    },
-                    popEnterTransition = {
-                        fadeIn(tween(TAB_TRANSITION, easing = FastOutSlowInEasing))
-                    },
-                    popExitTransition = {
-                        fadeOut(tween(TAB_TRANSITION, easing = FastOutSlowInEasing))
-                    }
+                    enterTransition = { fadeIn(tween(TAB_TRANSITION, easing = FastOutSlowInEasing)) },
+                    exitTransition = { fadeOut(tween(TAB_TRANSITION, easing = FastOutSlowInEasing)) },
+                    popEnterTransition = { fadeIn(tween(TAB_TRANSITION, easing = FastOutSlowInEasing)) },
+                    popExitTransition = { fadeOut(tween(TAB_TRANSITION, easing = FastOutSlowInEasing)) }
                 ) {
                     composable(Screen.Home.route) { HomeScreen() }
                     composable(Screen.CvProfile.route) {
@@ -82,66 +77,26 @@ fun MainScreen(onLogout: () -> Unit = {}) {
                         JobsScreen()
                     }
                     composable(Screen.Feeds.route) {
-                        FeedsScreen()
+                        FeedsScreen(onNavigateToChatDetail = onNavigateToChatDetail)
                     }
+
+                    // TAB TIN NHẮN (Danh sách phòng chat)
                     composable(Screen.Messages.route) {
-                        val currentUserId = remember {
-                            "9255374e-1e6d-4e9b-b4ec-5b11b2652605"
-                        }
+                        val context = LocalContext.current
+                        val sharedPref = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+                        val currentUserId = sharedPref.getString("USER_ID", "") ?: ""
+                        Log.d("TEST_ID", "ID của tôi là: [$currentUserId]")
                         ChatListScreen(
                             currentUserId = currentUserId,
+                            viewModel = chatViewModel,
                             onConversationClick = { conversationId, partnerName, partnerId ->
-                                innerNavController.navigate(
-                                    Screen.ChatDetail.createRoute(conversationId, partnerName, partnerId)
-                                )
-                            },
-                            viewModel = chatViewModel
+                                // 2. BẤM VÀO ĐÂY, SỰ KIỆN SẼ BAY RA NGOÀI FILE NextStepZNavGraph ĐỂ MỞ FULL MÀN HÌNH
+                                onNavigateToChatDetail(conversationId, partnerName, partnerId)
+                            }
                         )
                     }
 
-                    composable(
-                        route = Screen.ChatDetail.route,
-                        arguments = listOf(
-                            navArgument("conversationId") { type = NavType.StringType },
-                            navArgument("partnerName") { type = NavType.StringType },
-                            navArgument("partnerId") { type = NavType.StringType }
-                        ),
-                        enterTransition = {
-                            fadeIn(tween(TAB_TRANSITION, easing = FastOutSlowInEasing))
-                        },
-                        exitTransition = {
-                            fadeOut(tween(TAB_TRANSITION, easing = FastOutSlowInEasing))
-                        }
-                    ) { backStackEntry ->
-                        val conversationId = backStackEntry.arguments?.getString("conversationId") ?: ""
-                        val partnerName = try {
-                            URLDecoder.decode(
-                                backStackEntry.arguments?.getString("partnerName") ?: "",
-                                StandardCharsets.UTF_8.toString()
-                            )
-                        } catch (e: Exception) {
-                            backStackEntry.arguments?.getString("partnerName") ?: "Người dùng"
-                        }
-                        val partnerId = try {
-                            URLDecoder.decode(
-                                backStackEntry.arguments?.getString("partnerId") ?: "",
-                                StandardCharsets.UTF_8.toString()
-                            )
-                        } catch (e: Exception) {
-                            backStackEntry.arguments?.getString("partnerId") ?: ""
-                        }
-                        val currentUserId = remember {
-                            "9255374e-1e6d-4e9b-b4ec-5b11b2652605"
-                        }
-
-                        ChatDetailScreen(
-                            conversationId = conversationId,
-                            partnerName = partnerName,
-                            currentUserId = currentUserId,
-                            onNavigateBack = { innerNavController.popBackStack() },
-                            viewModel = chatViewModel
-                        )
-                    }
+                    // ĐÃ XÓA composable(Screen.ChatDetail.route) KHỎI ĐÂY!
 
                     composable(Screen.Account.route) {
                         AccountScreen(
@@ -153,7 +108,6 @@ fun MainScreen(onLogout: () -> Unit = {}) {
                 }
             }
 
-            // Bottom navigation bar
             BottomNavBar(
                 items = bottomNavItems,
                 currentRoute = currentRoute,

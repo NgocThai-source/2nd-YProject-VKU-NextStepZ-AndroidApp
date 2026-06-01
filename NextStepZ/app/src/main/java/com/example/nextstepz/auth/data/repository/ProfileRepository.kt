@@ -11,26 +11,26 @@ import com.example.nextstepz.auth.data.remote.RetrofitClientAuth
 
 class ProfileRepository(private val context: Context) {
     suspend fun getProvinces(): ProvinceListResponse {
-        return RetrofitClientAuth.getApiInterface(context).getProvinces()
+        return RetrofitClientAuth.getAuthApiInterface(context).getProvinces()
     }
 
     suspend fun getUniversitiesByProvince(provinceCode: Int): UniversityListResponse {
-        return RetrofitClientAuth.getApiInterface(context).getUniversitiesByProvince(provinceCode)
+        return RetrofitClientAuth.getAuthApiInterface(context).getUniversitiesByProvince(provinceCode)
     }
 
     suspend fun completeProfile(profileId: String, request: CompleteProfileRequest): SimpleResponse {
-        return RetrofitClientAuth.getApiInterface(context).completeProfile(profileId, request)
+        return RetrofitClientAuth.getAuthApiInterface(context).completeProfile(profileId, request)
     }
 
     suspend fun updateEmail(request: UpdateEmailRequest): SimpleResponse {
-        return RetrofitClientAuth.getApiInterface(context).updateEmail(request)
+        return RetrofitClientAuth.getAuthApiInterface(context).updateEmail(request)
     }
 
     suspend fun updatePassword(request: UpdatePasswordRequest): SimpleResponse {
-        return RetrofitClientAuth.getApiInterface(context).updatePassword(request)
+        return RetrofitClientAuth.getAuthApiInterface(context).updatePassword(request)
     }
 
     suspend fun logout(userId: String): SimpleResponse {
-        return RetrofitClientAuth.getApiInterface(context).logout(userId)
+        return RetrofitClientAuth.getAuthApiInterface(context).logout(userId)
     }
 }

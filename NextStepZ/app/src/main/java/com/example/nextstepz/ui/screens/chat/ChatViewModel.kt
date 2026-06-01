@@ -1,16 +1,16 @@
 package com.example.nextstepz.ui.screens.chat
 
 import android.app.Application
+import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.nextstepz.chat.data.model.ChatMessageUi
 import com.example.nextstepz.chat.data.model.ConversationItem
-import com.example.nextstepz.chat.data.model.MessageItem
+import com.example.nextstepz.chat.data.model.ConversationUi
 import com.example.nextstepz.chat.data.repository.ChatRepository
-
 import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.Dispatchers
@@ -20,24 +20,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-data class ConversationUi(
-    val conversationId: String,
-    val partnerName: String,
-    val partnerId: String,
-    val lastMessage: String,
-    val lastMessageTime: String,
-    val unreadCount: Int
-)
-
-sealed class ChatUiState<out T> {
-    data object Idle : ChatUiState<Nothing>()
-    data object Loading : ChatUiState<Nothing>()
-    data class Success<T>(val data: T) : ChatUiState<T>()
-    data class Error(val message: String) : ChatUiState<Nothing>()
-}
-
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = ChatRepository(application)
+    private val repository = ChatRepository(application) // Đảm bảo Repo nhận context
     private var socket: Socket? = null
 
     private var _currentUserId: String = ""
@@ -57,24 +41,26 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _isSending = MutableStateFlow(false)
     val isSending: StateFlow<Boolean> = _isSending.asStateFlow()
-
     @RequiresApi(Build.VERSION_CODES.O)
     fun fetchConversations(profileId: String) {
         _currentUserId = profileId
         viewModelScope.launch {
             _conversationsState.value = ChatUiState.Loading
-            repository.getConversations(profileId).fold(
+            repository.getConversations().fold( // Đã xóa myProfileId theo chuẩn bảo mật
                 onSuccess = { response ->
-                    val list = response.data?.map { item ->
-                        val partner = item.conversations.participants
-                            .firstOrNull { it.profiles?.id != profileId }
+                    Log.d("CHECK_JSON", "Data từ Server: ${com.google.gson.Gson().toJson(response)}")
+                    val list = response.data?.mapNotNull { item ->
+                        // 1. Chốt chặn an toàn: Nếu object conversations bị null từ Server thì BỎ QUA item này luôn
+                        val convDetail = item.conversations ?: return@mapNotNull null
+                        val partner = convDetail.participants
+                            ?.firstOrNull { it.profiles?.id != profileId }
                             ?.profiles
                         ConversationUi(
                             conversationId = item.conversations.id,
-                            partnerName = partner?.full_name ?: "Người dùng",
+                            partnerName = partner?.getDisplayName() ?: "Người dùng",
                             partnerId = partner?.id ?: "",
-                            lastMessage = "Chưa có tin nhắn",
-                            lastMessageTime = item.conversations.last_message_at?.let { formatTime(it) } ?: "",
+                            lastMessage = item.conversations.lastMessageContent ?: "Chưa có tin nhắn",
+                            lastMessageTime = item.conversations.lastMessageAt?.let { formatTime(it) } ?: "",
                             unreadCount = calculateUnread(item)
                         )
                     } ?: emptyList()
@@ -82,7 +68,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     _conversationsState.value = ChatUiState.Success(list)
                 },
                 onFailure = { e ->
-                    _conversationsState.value = ChatUiState.Error(e.message ?: "Lỗi khi tải danh sách cuộc trò chuyện")
+                    _conversationsState.value = ChatUiState.Error(e.message ?: "Lỗi khi tải danh sách")
                     Log.e("ChatViewModel", "fetchConversations error: ${e.message}")
                 }
             )
@@ -100,168 +86,187 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                     val list = response.data?.map { item ->
                         ChatMessageUi(
                             id = item.id,
-                            text = if (item.is_deleted) "Tin nhắn đã bị thu hồi" else item.content,
-                            senderId = item.sender?.id ?: "",
-                            senderName = item.sender?.full_name ?: "Người dùng",
-                            isMyMessage = item.sender?.id == profileId,
-                            timestamp = formatTime(item.created_at),
-                            isEdited = item.is_edited,
-                            isDeleted = item.is_deleted,
-                            messageType = item.message_type ?: "text"
+                            text = if (item.isDeleted) "Tin nhắn đã bị thu hồi" else item.content,
+                            senderId = item.senderId, // Đã map chuẩn từ JSON
+                            senderName = item.sender?.getDisplayName() ?: "Người dùng",
+                            isMyMessage = item.senderId == profileId,
+                            timestamp = formatTime(item.createdAt),
+                            isEdited = item.isEdited,
+                            isDeleted = item.isDeleted,
+                            messageType = item.messageType ?: "text"
                         )
                     } ?: emptyList()
+                    // Khi lấy lịch sử về thì lật ngược lại nếu UI Compose của bạn cần list từ dưới lên
                     _messages.value = list
                     _messagesState.value = ChatUiState.Success(list)
                 },
                 onFailure = { e ->
-                    _messagesState.value = ChatUiState.Error(e.message ?: "Lỗi khi tải tin nhắn")
+                    _messagesState.value = ChatUiState.Error(e.message ?: "Lỗi tải tin nhắn")
                     Log.e("ChatViewModel", "fetchMessages error: ${e.message}")
                 }
             )
         }
     }
 
+    // ĐÃ XÓA myProfileId ĐỂ APP KHÔNG GỬI LÊN SERVER (Chỉ giữ partnerProfileId)
+    fun createOrGetConversation(
+        partnerProfileId: String,
+        onResult: (String?) -> Unit
+    ) {
+        viewModelScope.launch {
+            repository.createOrGetConversation(partnerProfileId).fold(
+                onSuccess = { response ->
+                    Log.d(
+                        "CREATE_CHAT_RESPONSE",
+                        "Response từ BE: ${com.google.gson.Gson().toJson(response)}"
+                    )
+
+                    val conversationId = response.data?.conversationId
+
+                    Log.d(
+                        "CREATE_CHAT_RESPONSE",
+                        "conversationId parse được: $conversationId"
+                    )
+
+                    onResult(conversationId)
+                },
+                onFailure = { e ->
+                    Log.e(
+                        "CREATE_CHAT_RESPONSE",
+                        "Lỗi gọi API create conversation: ${e.message}",
+                        e
+                    )
+
+                    onResult(null)
+                }
+            )
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
-    fun connectSocket(conversationId: String, profileId: String) {
-        _currentUserId = profileId
+    fun connectSocket(conversationId: String, currentUserId: String) {
+        _currentUserId = currentUserId
         _currentConversationId = conversationId
         try {
-            val opts = IO.Options()
+            val sharedPref =
+                getApplication<Application>().getSharedPreferences("AppPrefs", Context.MODE_PRIVATE)
+            val token = sharedPref.getString("ACCESS_TOKEN", "")
+
+            val opts = IO.Options().apply { auth = mapOf("token" to token) }
             socket = IO.socket("http://10.0.2.2:5000", opts)
-            socket?.connect()
 
             socket?.on(Socket.EVENT_CONNECT) {
                 Log.d("Chat", "Socket connected!")
-                socket?.emit("user_connected", profileId)
                 socket?.emit("join_conversation", conversationId)
             }
 
+            // Lắng nghe tin nhắn mới
             socket?.on("receive_message") { args ->
                 if (args.isNotEmpty()) {
                     try {
                         val data = args[0] as JSONObject
+
+                        // Parse JSON cẩn thận, chọc sâu vào object sender để lấy tên
                         val content = data.optString("content", "")
                         val senderId = data.optString("sender_id", "")
                         val isDeleted = data.optBoolean("is_deleted", false)
                         val isEdited = data.optBoolean("is_edited", false)
                         val messageId = data.optString("id", java.util.UUID.randomUUID().toString())
                         val createdAt = data.optString("created_at", "")
-                        val senderName = data.optString("sender_name", "Người dùng")
+
+                        val senderObject = data.optJSONObject("sender")
+                        val senderName = senderObject?.optString("full_name") ?: "Người dùng"
 
                         val newMessage = ChatMessageUi(
                             id = messageId,
                             text = if (isDeleted) "Tin nhắn đã bị thu hồi" else content,
                             senderId = senderId,
                             senderName = senderName,
-                            isMyMessage = senderId == profileId,
+                            isMyMessage = senderId == currentUserId,
                             timestamp = formatTime(createdAt),
                             isEdited = isEdited,
                             isDeleted = isDeleted,
                             messageType = data.optString("message_type", "text")
                         )
 
+                        // THÊM TIN NHẮN MỚI LÊN ĐẦU HOẶC CUỐI LIST TÙY VÀO UI COMPOSE CỦA BẠN
                         viewModelScope.launch(Dispatchers.Main) {
-                            _messages.value = _messages.value + newMessage
-                            Log.d("ChatApp", "receive_message: ${newMessage.text}")
+                            val currentList = _messages.value
+                            _messages.value = listOf(newMessage) + currentList
+                            // Nếu list trong Jetpack Compose bị ngược, đổi thành: listOf(newMessage) + currentList
                         }
                     } catch (e: Exception) {
-                        Log.e("ChatApp", "receive_message parse error: ${e.message}")
+                        Log.e("ChatApp", "LỖI PARSE JSON SOCKET: ${e.message}")
                     }
                 }
             }
 
+            // Lắng nghe Edit
             socket?.on("message_edited") { args ->
                 if (args.isNotEmpty()) {
-                    try {
-                        val data = args[0] as JSONObject
-                        val messageId = data.optString("id", "")
-                        val newContent = data.optString("content", "")
-                        viewModelScope.launch(Dispatchers.Main) {
-                            _messages.value = _messages.value.map {
-                                if (it.id == messageId) it.copy(text = newContent, isEdited = true) else it
-                            }
+                    val data = args[0] as JSONObject
+                    val messageId = data.optString("id", "")
+                    val newContent = data.optString("content", "")
+                    viewModelScope.launch(Dispatchers.Main) {
+                        _messages.value = _messages.value.map {
+                            if (it.id == messageId) it.copy(
+                                text = newContent,
+                                isEdited = true
+                            ) else it
                         }
-                    } catch (e: Exception) {
-                        Log.e("ChatApp", "message_edited error: ${e.message}")
                     }
                 }
             }
 
+            // Lắng nghe Delete
             socket?.on("message_deleted") { args ->
                 if (args.isNotEmpty()) {
-                    try {
-                        val data = args[0] as JSONObject
-                        val messageId = data.optString("id", "")
-                        viewModelScope.launch(Dispatchers.Main) {
-                            _messages.value = _messages.value.map {
-                                if (it.id == messageId) it.copy(text = "Tin nhắn đã bị thu hồi", isDeleted = true) else it
-                            }
+                    val data = args[0] as JSONObject
+                    val messageId = data.optString("id", "")
+                    viewModelScope.launch(Dispatchers.Main) {
+                        _messages.value = _messages.value.map {
+                            if (it.id == messageId) it.copy(
+                                text = "Tin nhắn đã bị thu hồi",
+                                isDeleted = true
+                            ) else it
                         }
-                    } catch (e: Exception) {
-                        Log.e("ChatApp", "message_deleted error: ${e.message}")
                     }
                 }
             }
 
-            socket?.on("error_message") { args ->
-                if (args.isNotEmpty()) {
-                    try {
-                        val data = args[0] as JSONObject
-                        Log.e("ChatApp", "Socket error: ${data.optString("message", "Unknown error")}")
-                    } catch (e: Exception) {
-                        Log.e("ChatApp", "error_message parse error: ${e.message}")
-                    }
-                }
-            }
+            // NHỚ ĐỂ CONNECT Ở CUỐI CÙNG TRÁNH LỖI RACE CONDITION
+            socket?.connect()
 
         } catch (e: Exception) {
-            Log.e("Chat", "Socket connection error", e)
+            Log.e("Chat", "Socket error", e)
         }
     }
 
     fun sendMessage(content: String) {
         if (content.isBlank() || _currentConversationId.isBlank() || _currentUserId.isBlank()) return
-        _isSending.value = true
+
         val messageData = JSONObject().apply {
             put("conversationId", _currentConversationId)
-            put("senderId", _currentUserId)
             put("content", content)
         }
         socket?.emit("send_message", messageData)
-        _isSending.value = false
     }
 
     fun editMessage(messageId: String, newContent: String) {
         val editData = JSONObject().apply {
+            put("conversationId", _currentConversationId)
             put("messageId", messageId)
             put("newContent", newContent)
-            put("senderId", _currentUserId)
-            put("conversationId", _currentConversationId)
         }
         socket?.emit("edit_message", editData)
     }
 
     fun deleteMessage(messageId: String) {
         val deleteData = JSONObject().apply {
-            put("messageId", messageId)
-            put("senderId", _currentUserId)
             put("conversationId", _currentConversationId)
+            put("messageId", messageId)
         }
         socket?.emit("delete_message", deleteData)
-    }
-
-    fun createOrGetConversation(myProfileId: String, partnerProfileId: String, onResult: (String?) -> Unit) {
-        viewModelScope.launch {
-            repository.createOrGetConversation(myProfileId, partnerProfileId).fold(
-                onSuccess = { response ->
-                    onResult(response.data)
-                },
-                onFailure = { e ->
-                    Log.e("ChatViewModel", "createOrGetConversation error: ${e.message}")
-                    onResult(null)
-                }
-            )
-        }
     }
 
     fun clearMessages() {
@@ -283,8 +288,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun calculateUnread(item: ConversationItem): Int {
-        val lastMessageTime = item.conversations.last_message_at ?: return 0
-        val lastReadAt = item.last_read_at ?: return 1
+        val lastMessageTime = item.conversations?.lastMessageAt ?: return 0
+        val lastReadAt = item.lastReadAt ?: return 1
         return try {
             if (java.time.Instant.parse(lastMessageTime) > java.time.Instant.parse(lastReadAt)) 1 else 0
         } catch (e: Exception) {
@@ -297,15 +302,3 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         socket?.disconnect()
     }
 }
-
-data class ChatMessageUi(
-    val id: String,
-    val text: String,
-    val senderId: String,
-    val senderName: String,
-    val isMyMessage: Boolean,
-    val timestamp: String,
-    val isEdited: Boolean,
-    val isDeleted: Boolean,
-    val messageType: String
-)

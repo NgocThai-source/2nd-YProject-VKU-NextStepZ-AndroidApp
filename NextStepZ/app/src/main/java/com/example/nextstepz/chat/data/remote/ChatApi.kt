@@ -1,9 +1,9 @@
 package com.example.nextstepz.chat.data.remote
 
-import com.example.nextstepz.chat.data.model.ConversationResponse
 import com.example.nextstepz.chat.data.model.CreateConversationRequest
 import com.example.nextstepz.chat.data.model.CreateConversationResponse
 import com.example.nextstepz.chat.data.model.MessageResponse
+import com.example.nextstepz.chat.data.model.MyConversationResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -12,9 +12,7 @@ import retrofit2.http.Query
 
 interface ChatApi {
     @GET("api/chat/conversations/{profileId}")
-    suspend fun getConversations(
-        @Path("profileId") profileId: String
-    ): ConversationResponse
+    suspend fun getConversations(): MyConversationResponse
 
     @GET("api/chat/messages/{conversationId}")
     suspend fun getMessages(

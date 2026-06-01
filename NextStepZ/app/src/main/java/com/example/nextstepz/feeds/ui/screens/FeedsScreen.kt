@@ -1,4 +1,5 @@
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -77,6 +78,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import com.example.nextstepz.feeds.data.model.Comment
 import com.example.nextstepz.feeds.ui.components.CommentSheet
@@ -87,6 +89,7 @@ import com.example.nextstepz.feeds.ui.components.UserReportModal
 import com.example.nextstepz.feeds.ui.viewmodel.CommentSheetState
 import com.example.nextstepz.feeds.ui.viewmodel.ModalSheetState
 import com.example.nextstepz.ui.components.GradientButton
+import com.example.nextstepz.ui.screens.chat.ChatViewModel
 import com.example.nextstepz.ui.theme.ErrorRed
 import com.example.nextstepz.ui.theme.GlassBorder
 import com.example.nextstepz.ui.theme.InputBackground
@@ -98,13 +101,20 @@ import com.example.nextstepz.ui.theme.TextTertiary
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FeedsScreen(
-    viewModel: FeedsViewModel = viewModel()
+    onNavigateToChatDetail: (
+        conversationId: String,
+        partnerName: String,
+        partnerId: String
+    ) -> Unit = { _, _, _ -> },
+    viewModel: FeedsViewModel = viewModel(),
+    chatViewModel: ChatViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState
     val isRefreshing by viewModel.isRefreshing
     val selectedFilter by viewModel.selectedFilter
     val isCreatePostVisible by viewModel.isCreatePostSheetVisible
     val commentSheetState by viewModel.commentSheetState
+    var isCreatingConversation by remember { mutableStateOf(false) }
     val commentSheetState2 = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val pullRefreshState = rememberPullToRefreshState()
     val createPostSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -112,6 +122,7 @@ fun FeedsScreen(
     val modalSheetState2 = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var refreshTick by remember { mutableIntStateOf(0) }
 
+    val context = LocalContext.current
     LaunchedEffect(isRefreshing) {
         if (!isRefreshing) {
             refreshTick += 1
@@ -339,15 +350,41 @@ fun FeedsScreen(
                 ) {
                     ProfilePreviewModal(
                         post = state.post,
-                        isUserReported = state.post.reportedUsers.contains(state.post.authorId),
-                        onDismiss = { viewModel.hideModal() },
-                        onMessageClick = { authorId ->
-                            viewModel.onMessageClick(authorId)
+                         isUserReported = state.post.reportedUsers.contains(state.post.authorId),
+                        onDismiss = {
+                            viewModel.hideModal()
                         },
-                        onReportUserClick = {
-                            if (!state.post.reportedUsers.contains(state.post.authorId)) {
-                                viewModel.showUserReportModal(state.post)
+
+                        onMessageClick = { partnerId ->
+                            if (!isCreatingConversation) {
+                                isCreatingConversation = true
+
+                                chatViewModel.createOrGetConversation(
+                                    partnerProfileId = partnerId
+                                ) { conversationId ->
+                                    isCreatingConversation = false
+
+                                    if (conversationId.isNullOrBlank()) {
+                                        Toast.makeText(
+                                            context,
+                                            "Không thể tạo cuộc trò chuyện. Vui lòng thử lại.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    } else {
+                                        viewModel.hideModal()
+
+                                        onNavigateToChatDetail(
+                                            conversationId,
+                                            state.post.authorName,
+                                            partnerId
+                                        )
+                                    }
+                                }
                             }
+                        },
+
+                        onReportUserClick = {
+                            viewModel.showUserReportModal(state.post)
                         }
                     )
                 }
