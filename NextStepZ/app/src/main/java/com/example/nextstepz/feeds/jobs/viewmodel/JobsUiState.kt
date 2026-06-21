@@ -1,7 +1,6 @@
 package com.example.nextstepz.feeds.jobs.viewmodel
 
 import com.example.nextstepz.feeds.jobs.data.model.Job
-import com.example.nextstepz.feeds.jobs.data.model.JobCategory
 import com.example.nextstepz.feeds.jobs.data.model.JobFilterParams
 
 sealed class JobsUiState {
@@ -16,7 +15,7 @@ sealed class JobsUiState {
 
 sealed class JobDetailState {
     object Hidden : JobDetailState()
-    data class Shown(val job: Job) : JobDetailState()
+    data class Shown(val job: Job?) : JobDetailState()
 }
 
 sealed class JobFilterState {

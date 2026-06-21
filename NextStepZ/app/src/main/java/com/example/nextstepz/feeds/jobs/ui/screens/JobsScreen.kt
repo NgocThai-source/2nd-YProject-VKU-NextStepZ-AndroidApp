@@ -1,5 +1,7 @@
 package com.example.nextstepz.feeds.jobs.ui.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -70,15 +72,15 @@ import com.example.nextstepz.feeds.jobs.ui.components.JobDetailSheet
 import com.example.nextstepz.feeds.jobs.ui.components.JobFilterSheet
 import com.example.nextstepz.feeds.jobs.ui.components.JobSearchBar
 import com.example.nextstepz.feeds.jobs.ui.components.JobShimmer
-import com.example.nextstepz.feeds.jobs.ui.components.ReportJobSheet
 import com.example.nextstepz.feeds.ui.components.RefreshHeader
 import com.example.nextstepz.feeds.jobs.viewmodel.JobDetailState
 import com.example.nextstepz.feeds.jobs.viewmodel.JobFilterState
 import com.example.nextstepz.feeds.jobs.viewmodel.JobsUiState
 import com.example.nextstepz.feeds.jobs.viewmodel.JobsViewModel
-import com.example.nextstepz.feeds.jobs.viewmodel.ReportState
 import com.example.nextstepz.feeds.applications.ui.components.ApplicationManagementSheet
 import com.example.nextstepz.feeds.applications.viewmodel.ApplicationsViewModel
+import com.example.nextstepz.feeds.jobs.ui.components.ReportJobSheet
+import com.example.nextstepz.feeds.jobs.viewmodel.ReportState
 import com.example.nextstepz.ui.components.SectionHeader
 import com.example.nextstepz.ui.theme.DarkBackground
 import com.example.nextstepz.ui.theme.ErrorRed
@@ -93,12 +95,13 @@ import com.example.nextstepz.ui.theme.TextOnGradient
 import com.example.nextstepz.ui.theme.GlassBorder
 import kotlinx.coroutines.delay
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JobsScreen(
     viewModel: JobsViewModel = viewModel()
 ) {
-    val applicationViewModel: ApplicationsViewModel = remember { ApplicationsViewModel() }
+    val applicationViewModel: ApplicationsViewModel = viewModel()
     var isApplicationSheetVisible by rememberSaveable { mutableStateOf(false) }
 
     val uiState by viewModel.uiState
@@ -149,10 +152,12 @@ fun JobsScreen(
                             title = "Việc làm"
                         )
                         Spacer(modifier = Modifier.height(12.dp))
-                        ApplicationManagementButton(
-                            pendingCount = applicationViewModel.pendingCount,
-                            onClick = { isApplicationSheetVisible = true }
-                        )
+                        if (viewModel.isEmployer) {
+                            ApplicationManagementButton(
+                                pendingCount = applicationViewModel.pendingCount,
+                                onClick = { isApplicationSheetVisible = true }
+                            )
+                        }
                     }
                 }
 
@@ -212,7 +217,7 @@ fun JobsScreen(
                                 FeaturedSection(
                                     featuredJobs = featuredJobs,
                                     refreshTick = refreshTick,
-                                    onJobClick = { viewModel.showJobDetail(it.id) }
+                                    onJobClick = {}
                                 )
                             }
                         }
@@ -261,9 +266,13 @@ fun JobsScreen(
                                     job = job,
                                     index = index,
                                     refreshTick = refreshTick,
-                                    onClick = { viewModel.showJobDetail(job.id) },
-                                    onSaveClick = { viewModel.toggleSaveJob(job.id) },
-                                    onReportClick = { viewModel.showReportSheet(job.id, job.title) }
+                                    onClick = {viewModel.showJobDetail(job.id)},
+                                    onSaveClick = {if(job.isSaved) {
+                                        viewModel.toggleUnSaveJob(job.id)
+                                    } else {
+                                        viewModel.toggleSaveJob(job.id)
+                                    } },
+                                    onReportClick = { viewModel.showReportSheet(job.id, job.title)}
                                 )
                             }
                         }
@@ -283,11 +292,17 @@ fun JobsScreen(
                 ) {
                     JobDetailSheet(
                         job = state.job,
-                        isSaved = state.job.isSaved,
+                        isSaved = state.job?.isSaved ?: false ,
                         isApplying = isApplying,
                         applyMessage = applyMessage,
-                        onApplyClick = { viewModel.applyToJob(state.job.id) },
-                        onSaveClick = { viewModel.toggleSaveJob(state.job.id) },
+                        onApplyClick = {viewModel.applyToJob(state.job?.id ?: "") },
+                        onSaveClick = {
+                            if(state.job?.isSaved ?: false){
+                                viewModel.toggleUnSaveJob(state.job.id)
+                            }else{
+                                viewModel.toggleSaveJob(state.job?.id ?: "")
+                            }
+                        },
                         onDismiss = {
                             viewModel.hideJobDetail()
                             viewModel.clearApplyMessage()
@@ -327,8 +342,19 @@ fun JobsScreen(
             ) {
                 CreateJobSheet(
                     onDismiss = { viewModel.hideCreateJobSheet() },
-                    onPost = { title, companyName, companyAddress, location, salaryMin, salaryMax, jobType, expLevel, description, requirements, benefits, skills, deadline, companyWebsite ->
-                        viewModel.createJob(title, companyName, companyAddress, location, salaryMin, salaryMax, jobType, expLevel, description, requirements, benefits, skills, deadline, companyWebsite)
+                    onPost = { title, salaryMin, salaryMax, jobType, expLevel, description, requirements, benefits, skills, deadline, _ ->
+                        viewModel.createJob(
+                            title = title,
+                            salaryMin = salaryMin,
+                            salaryMax = salaryMax,
+                            jobType = jobType,
+                            experienceLevel = expLevel,
+                            description = description,
+                            requirements = requirements,
+                            benefits = benefits,
+                            skills = skills,
+                            deadline = deadline
+                        )
                     }
                 )
             }
@@ -346,7 +372,7 @@ fun JobsScreen(
                     ReportJobSheet(
                         jobTitle = state.jobTitle,
                         onDismiss = { viewModel.hideReportSheet() },
-                        onSubmit = { reason -> viewModel.submitReport(state.jobId, reason) }
+                        onSubmit = { reason, customText -> viewModel.submitReport(state.jobId, reason, customText) }
                     )
                 }
             }
@@ -356,6 +382,7 @@ fun JobsScreen(
         if (isApplicationSheetVisible) {
             ApplicationManagementSheet(
                 viewModel = applicationViewModel,
+                jobId = null,
                 onDismiss = { isApplicationSheetVisible = false }
             )
         }
@@ -388,7 +415,6 @@ fun JobsScreen(
         }
     }
 }
-
 @Composable
 private fun FeaturedSection(
     featuredJobs: List<Job>,
@@ -681,4 +707,3 @@ private fun ApplicationManagementButton(
         }
     }
 }
-

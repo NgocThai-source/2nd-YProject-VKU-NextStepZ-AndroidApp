@@ -50,7 +50,7 @@ import com.example.nextstepz.ui.theme.TextSecondary
 fun ReportJobSheet(
     jobTitle: String,
     onDismiss: () -> Unit,
-    onSubmit: (String) -> Unit,
+    onSubmit: (String, String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var selectedReason by remember { mutableStateOf("Thông tin sai sự thật") }
@@ -184,12 +184,8 @@ fun ReportJobSheet(
         GradientButton(
             text = "Gửi báo cáo",
             onClick = {
-                val finalReason = if (selectedReason == "Lý do khác") {
-                    "Lý do khác: $otherReason"
-                } else {
-                    selectedReason
-                }
-                onSubmit(finalReason)
+                val customText = if (selectedReason == "Lý do khác") otherReason else null
+                onSubmit(selectedReason, customText)
                 onDismiss()
             },
             enabled = selectedReason != "Lý do khác" || otherReason.isNotBlank()

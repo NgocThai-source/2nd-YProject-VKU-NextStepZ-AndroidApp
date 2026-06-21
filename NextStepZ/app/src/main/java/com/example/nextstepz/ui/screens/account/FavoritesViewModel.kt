@@ -1,11 +1,14 @@
 package com.example.nextstepz.ui.screens.account
 
+import JobRepository
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nextstepz.feeds.data.model.Post
 import com.example.nextstepz.feeds.data.repository.PostRepository
 import com.example.nextstepz.feeds.jobs.data.model.Job
+import com.example.nextstepz.feeds.jobs.data.model.JobFilterParams
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +21,7 @@ class FavoritesViewModel(
 ) : AndroidViewModel(application) {
 
     private val postRepository = PostRepository(application.applicationContext)
+    private val jobRepository = JobRepository(application.applicationContext)
 
     private val _uiState =
         MutableStateFlow<FavoritesUiState>(FavoritesUiState.Loading)
@@ -30,8 +34,6 @@ class FavoritesViewModel(
     val selectedTab: StateFlow<FavoriteTab> = _selectedTab.asStateFlow()
 
     private val _feedBookmarks = MutableStateFlow<List<Post>>(emptyList())
-
-    // Chưa nối API bookmark việc làm thì tạm để rỗng
     private val _jobBookmarks = MutableStateFlow<List<Job>>(emptyList())
 
     fun loadData() {
@@ -39,17 +41,31 @@ class FavoritesViewModel(
             _uiState.value = FavoritesUiState.Loading
 
             try {
-                val response = postRepository.getPosts(
-                    page = 1,
-                    limit = 50,
-                    bookmarkedOnly = true
-                )
+                val feedsDeferred = async {
+                    postRepository.getPosts(
+                        page = 1,
+                        limit = 50,
+                        bookmarkedOnly = true
+                    )
+                }
 
-                if (response.success) {
-                    _feedBookmarks.value = response.posts
+                val jobsDeferred = async {
+                    jobRepository.getJobs(
+                        params = JobFilterParams(page = 1, limit = 50),
+                        savedOnly = true
+                    )
+                }
+
+                val feedsResponse = feedsDeferred.await()
+                val jobsResponse = jobsDeferred.await()
+
+                if (feedsResponse.success && jobsResponse.success) {
+                    _feedBookmarks.value = feedsResponse.posts
+                    _jobBookmarks.value = jobsResponse.jobs
                     publishSuccessState()
                 } else {
-                    _uiState.value = FavoritesUiState.Error(response.message)
+                    val errorMsg = if (!feedsResponse.success) feedsResponse.message else jobsResponse.message
+                    _uiState.value = FavoritesUiState.Error(errorMsg)
                 }
             } catch (e: Exception) {
                 _uiState.value = FavoritesUiState.Error(getErrorMessage(e))
@@ -62,17 +78,31 @@ class FavoritesViewModel(
             _isRefreshing.value = true
 
             try {
-                val response = postRepository.getPosts(
-                    page = 1,
-                    limit = 50,
-                    bookmarkedOnly = true
-                )
+                val feedsDeferred = async {
+                    postRepository.getPosts(
+                        page = 1,
+                        limit = 50,
+                        bookmarkedOnly = true
+                    )
+                }
 
-                if (response.success) {
-                    _feedBookmarks.value = response.posts
+                val jobsDeferred = async {
+                    jobRepository.getJobs(
+                        params = JobFilterParams(page = 1, limit = 50),
+                        savedOnly = true
+                    )
+                }
+
+                val feedsResponse = feedsDeferred.await()
+                val jobsResponse = jobsDeferred.await()
+
+                if (feedsResponse.success && jobsResponse.success) {
+                    _feedBookmarks.value = feedsResponse.posts
+                    _jobBookmarks.value = jobsResponse.jobs
                     publishSuccessState()
                 } else {
-                    _uiState.value = FavoritesUiState.Error(response.message)
+                    val errorMsg = if (!feedsResponse.success) feedsResponse.message else jobsResponse.message
+                    _uiState.value = FavoritesUiState.Error(errorMsg)
                 }
             } catch (e: Exception) {
                 _uiState.value = FavoritesUiState.Error(getErrorMessage(e))
@@ -106,10 +136,22 @@ class FavoritesViewModel(
     }
 
     fun removeJobBookmark(jobId: String) {
-        _jobBookmarks.value =
-            _jobBookmarks.value.filter { job -> job.id != jobId }
+        viewModelScope.launch {
+            try {
+                val response = jobRepository.unSaveJob(jobId)
 
-        publishSuccessState()
+                if (response.success) {
+                    _jobBookmarks.value =
+                        _jobBookmarks.value.filter { job -> job.id != jobId }
+
+                    publishSuccessState()
+                } else {
+                    _uiState.value = FavoritesUiState.Error(response.message)
+                }
+            } catch (e: Exception) {
+                _uiState.value = FavoritesUiState.Error(getErrorMessage(e))
+            }
+        }
     }
 
     private fun publishSuccessState() {

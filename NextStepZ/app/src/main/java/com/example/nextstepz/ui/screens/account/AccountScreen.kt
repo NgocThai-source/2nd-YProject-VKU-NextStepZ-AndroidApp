@@ -1,5 +1,6 @@
 package com.example.nextstepz.ui.screens.account
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -73,7 +74,6 @@ object AccountNavRoutes {
     const val FAVORITES = "favorites"
     const val CV_STORAGE = "cv_storage"
 }
-
 @Composable
 fun AccountScreen(
     onLogout: () -> Unit = {},
@@ -82,9 +82,9 @@ fun AccountScreen(
     navController: NavHostController = rememberNavController(),
     viewModel: AccountViewModel = viewModel()
 ) {
+
     val context = LocalContext.current
     val tokenManager = remember { TokenManager(context) }
-
     LaunchedEffect(Unit) {
         viewModel.loadUserData(tokenManager)
     }
@@ -179,7 +179,7 @@ private fun AccountMainContent(
 ) {
     val scrollState = rememberScrollState()
     var showRoleDialog by remember { mutableStateOf(false) }
-
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -236,7 +236,13 @@ private fun AccountMainContent(
 
             ProfileMenuItem(
                 type = ProfileMenuType.Register,
-                onClick = { showRoleDialog = true }
+                onClick = {
+                    if(viewModel.userRole != UserRole.GUEST) {
+                        Toast.makeText(context, "Bạn đã đăng ký vai trò rồi!", Toast.LENGTH_SHORT).show()
+                    } else {
+                        showRoleDialog = true
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(12.dp))

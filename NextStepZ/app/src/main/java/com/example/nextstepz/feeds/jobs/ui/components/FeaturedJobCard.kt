@@ -41,7 +41,6 @@ import androidx.compose.ui.unit.sp
 import com.example.nextstepz.feeds.jobs.data.model.Job
 import com.example.nextstepz.ui.theme.AccentEmerald
 import com.example.nextstepz.ui.theme.AccentOrange
-import com.example.nextstepz.ui.theme.GlassBorder
 import com.example.nextstepz.ui.theme.GlassWhite
 import com.example.nextstepz.ui.theme.GradientMid
 import com.example.nextstepz.ui.theme.GradientStart
@@ -96,7 +95,6 @@ fun FeaturedJobCard(
             .padding(16.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Row 1: Badge + Avatar (fixed height row)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -140,7 +138,6 @@ fun FeaturedJobCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Row 2: Job title (min 2 lines, flexible, with fixed baseline)
             Text(
                 text = job.title,
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -155,7 +152,6 @@ fun FeaturedJobCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Row 3: Company name (fixed height row)
             Text(
                 text = job.companyName,
                 style = MaterialTheme.typography.bodyMedium.copy(
@@ -170,7 +166,6 @@ fun FeaturedJobCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Row 4: Location + Salary (fixed height row)
             Row(
                 modifier = Modifier.height(18.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -223,7 +218,6 @@ fun FeaturedJobCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Row 5: Tags + application count (fixed height row)
             Row(
                 modifier = Modifier.height(26.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -269,17 +263,6 @@ fun FeaturedJobCard(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "${job.applicationCount} ứng tuyển",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        lineHeight = 14.sp
-                    ),
-                    color = TextSecondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false)
-                )
             }
         }
     }

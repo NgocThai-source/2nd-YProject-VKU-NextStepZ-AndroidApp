@@ -1,5 +1,8 @@
 package com.example.nextstepz.feeds.applications.data.model
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+
 enum class ApplicationStatus(
     val label: String,
     val colorHex: Long,
@@ -16,18 +19,15 @@ data class Application(
     val studentEmail: String,
     val studentPhone: String,
     val studentAvatar: String? = null,
-    val cvUrl: String,
     val jobId: String,
     val jobTitle: String,
     val companyName: String,
     val appliedAt: String,
     val status: ApplicationStatus,
-    val coverLetter: String,
-    val notes: String = "",
-    val resumeFileName: String = "",
     val appliedVia: String = "Ứng tuyển trực tuyến"
 ) {
     val daysAgo: Int
+        @RequiresApi(Build.VERSION_CODES.O)
         get() {
             return try {
                 val applied = java.time.LocalDate.parse(appliedAt.take(10))
@@ -38,6 +38,7 @@ data class Application(
         }
 
     val appliedDisplay: String
+        @RequiresApi(Build.VERSION_CODES.O)
         get() = when (daysAgo) {
             0 -> "Hôm nay"
             1 -> "Hôm qua"

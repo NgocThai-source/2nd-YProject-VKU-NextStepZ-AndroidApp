@@ -1,5 +1,7 @@
 package com.example.nextstepz.feeds.applications.ui.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -48,6 +50,7 @@ import com.example.nextstepz.ui.theme.TextPrimary
 import com.example.nextstepz.ui.theme.TextSecondary
 import com.example.nextstepz.ui.theme.TextTertiary
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ApplicationCard(
     application: Application,
@@ -197,28 +200,6 @@ fun ApplicationCard(
                             lineHeight = 14.sp
                         ),
                         color = TextSecondary
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.AttachFile,
-                        contentDescription = null,
-                        tint = TextTertiary,
-                        modifier = Modifier.size(12.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = application.resumeFileName.ifEmpty { "CV" },
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            lineHeight = 14.sp
-                        ),
-                        color = TextSecondary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.width(140.dp)
                     )
                 }
             }

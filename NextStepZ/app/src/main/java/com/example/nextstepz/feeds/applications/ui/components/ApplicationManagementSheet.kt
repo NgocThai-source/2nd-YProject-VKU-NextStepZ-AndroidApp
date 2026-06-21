@@ -1,5 +1,7 @@
 package com.example.nextstepz.feeds.applications.ui.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -68,16 +70,17 @@ import com.example.nextstepz.ui.theme.GlassWhite
 import com.example.nextstepz.ui.theme.GradientEnd
 import com.example.nextstepz.ui.theme.GradientMid
 import com.example.nextstepz.ui.theme.GradientStart
-import com.example.nextstepz.ui.theme.TextOnGradient
 import com.example.nextstepz.ui.theme.TextPrimary
 import com.example.nextstepz.ui.theme.TextSecondary
 import com.example.nextstepz.ui.theme.TextTertiary
 import kotlinx.coroutines.delay
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ApplicationManagementSheet(
     viewModel: ApplicationsViewModel,
+    jobId: String?,
     onDismiss: () -> Unit
 ) {
     val uiState by viewModel.uiState
@@ -93,6 +96,9 @@ fun ApplicationManagementSheet(
     val snackbarHostState = remember { SnackbarHostState() }
     var refreshTick by remember { mutableIntStateOf(0) }
 
+    LaunchedEffect(jobId) {
+        viewModel.loadApplications(jobId)
+    }
     LaunchedEffect(filteredApps.map { it.id }) {
         refreshTick += 1
     }
@@ -369,8 +375,7 @@ fun ApplicationManagementSheet(
                     ApplicationDetailSheet(
                         application = state.application,
                         isLoadingAction = isLoadingAction,
-                        onStatusUpdate = { status ->
-                            viewModel.updateStatus(state.application.id, status)
+                        onStatusUpdate = {
                         },
                         onDismiss = { viewModel.hideApplicationDetail() }
                     )

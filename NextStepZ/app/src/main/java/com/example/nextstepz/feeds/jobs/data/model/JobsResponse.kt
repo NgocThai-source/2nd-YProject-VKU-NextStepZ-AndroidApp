@@ -15,20 +15,10 @@ data class JobResponse(
     val job: Job?
 )
 
-data class ApplyJobRequest(
-    val jobId: String,
-    val coverLetter: String = "",
-    val resumeUrl: String = ""
-)
-
 data class ApplyJobResponse(
     val success: Boolean,
     val message: String,
     val applicationId: String?
-)
-
-data class SaveJobRequest(
-    val jobId: String
 )
 
 data class SaveJobResponse(

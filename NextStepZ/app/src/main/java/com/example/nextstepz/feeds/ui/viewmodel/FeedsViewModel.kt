@@ -5,6 +5,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.nextstepz.auth.data.local.TokenManager
 import com.example.nextstepz.feeds.data.model.Comment
 import com.example.nextstepz.feeds.data.model.CreateCommentRequest
 import com.example.nextstepz.feeds.data.model.CreatePostRequest
@@ -70,6 +71,7 @@ class FeedsViewModel(
     private val processingCommentLikeIds = mutableSetOf<String>()
 
     private val processingBookmarkPostIds = mutableSetOf<String>()
+    private val tokenManager = TokenManager(application)
     init {
         loadPosts()
     }
@@ -538,7 +540,12 @@ class FeedsViewModel(
     }
 
     fun showCreatePostSheet() {
-        _isCreatePostSheetVisible.value = true
+        val role = tokenManager.userRole;
+        if(role == "student" || role == "employer") {
+            _isCreatePostSheetVisible.value = true
+        }else {
+            _uiState.value = FeedsUiState.Error("Bạn cần đăng ký thông tin Sinh viên hoặc Nhà tuyển dụng để sử dụng tính năng này.")
+        }
     }
 
     fun hideCreatePostSheet() {

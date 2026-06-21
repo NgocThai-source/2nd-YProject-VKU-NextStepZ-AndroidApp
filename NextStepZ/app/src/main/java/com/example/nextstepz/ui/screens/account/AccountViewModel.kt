@@ -1,15 +1,19 @@
 package com.example.nextstepz.ui.screens.account
 
+import android.app.Application
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import com.example.nextstepz.auth.data.local.TokenManager
 import com.example.nextstepz.auth.data.model.EmployerProfileUi
 import com.example.nextstepz.auth.data.model.StudentProfileUi
 import com.example.nextstepz.auth.data.model.UserRole
+import com.example.nextstepz.feeds.jobs.viewmodel.JobsUiState
 
-class AccountViewModel : ViewModel() {
+class AccountViewModel(application: Application) : AndroidViewModel(application) {
 
     var userName by mutableStateOf("")
         private set
@@ -35,7 +39,8 @@ class AccountViewModel : ViewModel() {
 
     var showLogoutDialog by mutableStateOf(false)
         private set
-
+    private val tokenManager = TokenManager(application)
+    val role = tokenManager.userRole
     fun loadUserData(tokenManager: TokenManager) {
         userName = tokenManager.userName ?: "Người dùng"
 

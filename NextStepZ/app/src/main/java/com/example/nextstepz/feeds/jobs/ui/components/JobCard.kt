@@ -11,8 +11,6 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,12 +25,9 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Money
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Flag
-import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -51,10 +46,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.nextstepz.auth.data.local.TokenManager
 import com.example.nextstepz.feeds.jobs.data.model.Job
+import com.example.nextstepz.feeds.jobs.viewmodel.JobsViewModel
 import com.example.nextstepz.ui.theme.AccentAmber
 import com.example.nextstepz.ui.theme.AccentEmerald
-import com.example.nextstepz.ui.theme.AccentOrange
 import com.example.nextstepz.ui.theme.ErrorRed
 import com.example.nextstepz.ui.theme.GlassBorder
 import com.example.nextstepz.ui.theme.GlassWhite
@@ -65,17 +62,18 @@ import com.example.nextstepz.ui.theme.TextPrimary
 import com.example.nextstepz.ui.theme.TextSecondary
 import com.example.nextstepz.ui.theme.TextTertiary
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun JobCard(
     job: Job,
     onClick: () -> Unit,
     onSaveClick: () -> Unit,
     onReportClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: JobsViewModel = viewModel()
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val myUserId = viewModel.isMyUserId;
 
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.98f else 1f,
@@ -108,7 +106,6 @@ fun JobCard(
             .padding(16.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Row 1: Company avatar + name + location
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.height(44.dp)
@@ -178,7 +175,6 @@ fun JobCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Row 2: Job title (min 2 lines, fixed baseline)
             Text(
                 text = job.title,
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -193,7 +189,6 @@ fun JobCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Row 3: Meta chips (fixed height)
             Row(
                 modifier = Modifier.height(24.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -205,43 +200,14 @@ fun JobCard(
                     tint = AccentEmerald
                 )
                 MetaChip(
-                    icon = Icons.Filled.Schedule,
-                    text = job.jobType.label,
-                    tint = GradientMid
-                )
-                MetaChip(
                     icon = Icons.Filled.Star,
                     text = job.experienceLevel.label,
                     tint = AccentAmber
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Row 4: Skills (fixed max height, wrapping is ok within bounds)
-            FlowRow(
-                modifier = Modifier.heightIn(max = 62.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                job.skills.take(4).forEach { skill ->
-                    SkillChip(text = skill)
-                }
-                if (job.skills.size > 4) {
-                    Text(
-                        text = "+${job.skills.size - 4}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary,
-                        modifier = Modifier
-                            .height(22.dp)
-                            .padding(horizontal = 4.dp, vertical = 4.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Divider
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -259,7 +225,6 @@ fun JobCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Row 5: Footer (deadline + views + actions, fixed height)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -269,55 +234,75 @@ fun JobCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.height(18.dp)
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.AccessTime,
-                        contentDescription = null,
-                        tint = TextTertiary,
-                        modifier = Modifier.size(12.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Hạn: ${job.deadline.take(10)}",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            lineHeight = 14.sp
-                        ),
-                        color = TextSecondary
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Icon(
-                        imageVector = Icons.Outlined.RemoveRedEye,
-                        contentDescription = null,
-                        tint = TextTertiary,
-                        modifier = Modifier.size(12.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${job.viewCount}",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            lineHeight = 14.sp
-                        ),
-                        color = TextSecondary
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.height(32.dp)
-                ) {
-                    IconButton(
-                        onClick = onReportClick,
-                        modifier = Modifier.size(32.dp)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(GradientMid.copy(alpha = 0.1f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Flag,
-                            contentDescription = "Tố cáo",
-                            tint = ErrorRed.copy(alpha = 0.7f),
-                            modifier = Modifier.size(18.dp)
+                        Text(
+                            text = job.jobType.label,
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            color = GradientMid
                         )
                     }
 
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    job.skills.take(2).forEach { skill ->
+                        Box(
+                            modifier = Modifier
+                                .padding(end = 4.dp)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(GlassBorder.copy(alpha = 0.3f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = skill,
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                color = TextSecondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    //Nếu đây là bài của CHÍNH MÌNH -> Ẩn luôn cái cờ
+                    if (job.employerId != myUserId) {
+                        // Nếu là bài người khác, kiểm tra xem đã báo cáo chưa
+                        if (job.isReported) {
+                            // Đã báo cáo -> Hiện cờ xám, khóa bấm
+                            IconButton(
+                                onClick = { },
+                                modifier = Modifier.size(32.dp),
+                                enabled = false
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Flag,
+                                    contentDescription = "Đã tố cáo",
+                                    tint = Color.Gray.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        } else {
+                            // Chưa báo cáo -> Hiện cờ đỏ cho phép bấm
+                            IconButton(
+                                onClick = onReportClick,
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Flag,
+                                    contentDescription = "Tố cáo",
+                                    tint = ErrorRed.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    }
                     IconButton(
                         onClick = onSaveClick,
                         modifier = Modifier.size(32.dp)
@@ -357,35 +342,10 @@ private fun MetaChip(
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = text,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 11.sp
-            ),
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
             color = tint,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
-private fun SkillChip(text: String) {
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(GlassBorder.copy(alpha = 0.3f))
-            .border(
-                width = 0.5.dp,
-                color = GlassBorder.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(6.dp)
-            )
-            .padding(horizontal = 8.dp, vertical = 4.dp)
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontSize = 11.sp
-            ),
-            color = TextSecondary
         )
     }
 }

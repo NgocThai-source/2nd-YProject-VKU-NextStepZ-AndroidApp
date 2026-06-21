@@ -107,8 +107,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
     }
-
-    // ĐÃ XÓA myProfileId ĐỂ APP KHÔNG GỬI LÊN SERVER (Chỉ giữ partnerProfileId)
     fun createOrGetConversation(
         partnerProfileId: String,
         onResult: (String?) -> Unit

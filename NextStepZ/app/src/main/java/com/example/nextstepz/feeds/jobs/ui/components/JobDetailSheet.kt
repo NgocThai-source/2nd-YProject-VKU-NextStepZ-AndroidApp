@@ -1,5 +1,7 @@
 package com.example.nextstepz.feeds.jobs.ui.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -49,7 +51,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextstepz.feeds.jobs.data.model.Job
+import com.example.nextstepz.feeds.jobs.viewmodel.JobsViewModel
 import com.example.nextstepz.ui.components.GradientButton
 import com.example.nextstepz.ui.theme.AccentAmber
 import com.example.nextstepz.ui.theme.AccentEmerald
@@ -64,20 +68,22 @@ import com.example.nextstepz.ui.theme.TextPrimary
 import com.example.nextstepz.ui.theme.TextSecondary
 import com.example.nextstepz.ui.theme.TextTertiary
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun JobDetailSheet(
-    job: Job,
+    job: Job?,
     isSaved: Boolean,
     isApplying: Boolean,
     applyMessage: String?,
     onApplyClick: () -> Unit,
     onSaveClick: () -> Unit,
     onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: JobsViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
-
+    val isEmployer = viewModel.isEmployer
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -133,7 +139,7 @@ fun JobDetailSheet(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = job.companyName.take(2).uppercase(),
+                text = job?.companyName?.take(2)?.uppercase() ?: "",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold
                 ),
@@ -144,7 +150,7 @@ fun JobDetailSheet(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = job.title,
+            text = job?.title ?: "",
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -154,7 +160,7 @@ fun JobDetailSheet(
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = job.companyName,
+            text = job?.companyName ?: "",
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.SemiBold
             ),
@@ -167,10 +173,10 @@ fun JobDetailSheet(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            if (job.isFeatured) {
+            if (job?.isFeatured ?: false) {
                 Badge(text = "NỔI BẬT", color = GradientMid)
             }
-            Badge(text = job.postedDisplay, color = TextTertiary)
+            Badge(text = job?.postedDisplay ?: "", color = TextTertiary)
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -185,12 +191,13 @@ fun JobDetailSheet(
 
         DetailGrid(
             items = listOf(
-                DetailInfo(Icons.Filled.Money, "Lương", job.salaryDisplay, AccentEmerald),
-                DetailInfo(Icons.Filled.Schedule, "Loại công việc", job.jobType.label, GradientMid),
-                DetailInfo(Icons.Filled.Star, "Cấp bậc", job.experienceLevel.label, AccentAmber),
-                DetailInfo(Icons.Filled.LocationOn, "Địa điểm", job.location, AccentOrange),
-                DetailInfo(Icons.Filled.AccessTime, "Hạn nộp", job.deadline.take(10), ErrorRed),
-                DetailInfo(Icons.Filled.Description, "Ngành", job.companyIndustry ?: "N/A", TextSecondary)
+                DetailInfo(Icons.Filled.Money, "Lương", job?.salaryDisplay ?: "", AccentEmerald),
+                DetailInfo(Icons.Filled.Schedule, "Loại công việc",
+                    job?.jobType?.label ?: "", GradientMid),
+                DetailInfo(Icons.Filled.Star, "Cấp bậc", job?.experienceLevel?.label ?: "", AccentAmber),
+                DetailInfo(Icons.Filled.LocationOn, "Địa điểm", job?.location ?: "", AccentOrange),
+                DetailInfo(Icons.Filled.AccessTime, "Hạn nộp", job?.deadline?.take(10) ?: "", ErrorRed),
+                DetailInfo(Icons.Filled.Description, "Ngành", job?.companyIndustry ?: "N/A", TextSecondary)
             )
         )
 
@@ -205,7 +212,7 @@ fun JobDetailSheet(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = job.description,
+            text = job?.description ?: "",
             style = MaterialTheme.typography.bodyMedium,
             color = TextSecondary,
             lineHeight = MaterialTheme.typography.bodyMedium.lineHeight * 1.3f
@@ -221,7 +228,7 @@ fun JobDetailSheet(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        job.requirements.forEach { req ->
+        job?.requirements?.forEach { req ->
             Row(
                 verticalAlignment = Alignment.Top,
                 modifier = Modifier.padding(vertical = 4.dp)
@@ -251,7 +258,7 @@ fun JobDetailSheet(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        job.benefits.forEach { benefit ->
+        job?.benefits?.forEach { benefit ->
             Row(
                 verticalAlignment = Alignment.Top,
                 modifier = Modifier.padding(vertical = 4.dp)
@@ -281,7 +288,7 @@ fun JobDetailSheet(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            job.skills.forEach { skill ->
+            job?.skills?.forEach { skill ->
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
@@ -334,7 +341,7 @@ fun JobDetailSheet(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = job.companyName.take(2).uppercase(),
+                            text = job?.companyName?.take(2)?.uppercase() ?: "",
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                             color = GradientMid
                         )
@@ -342,22 +349,22 @@ fun JobDetailSheet(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = job.companyName,
+                            text = job?.companyName ?: "",
                             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                             color = TextPrimary
                         )
                         Text(
-                            text = job.companyIndustry ?: "Công nghệ",
+                            text = job?.companyIndustry ?: "Công nghệ",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextSecondary
                         )
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                DetailRow(Icons.Filled.Person, "Quy mô", job.companySize ?: "N/A")
+                DetailRow(Icons.Filled.Person, "Quy mô", job?.companySize ?: "N/A")
                 Spacer(modifier = Modifier.height(8.dp))
-                DetailRow(Icons.Filled.LocationOn, "Địa chỉ", job.companyAddress)
-                if (!job.companyWebsite.isNullOrBlank()) {
+                DetailRow(Icons.Filled.LocationOn, "Địa chỉ", job?.companyAddress ?:"" )
+                if (!job?.companyWebsite.isNullOrBlank()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     DetailRow(Icons.Filled.Language, "Website", job.companyWebsite)
                 }
@@ -379,12 +386,12 @@ fun JobDetailSheet(
                 .padding(16.dp)
         ) {
             Column {
-                DetailRow(Icons.Filled.Person, "Người liên hệ", job.employerName)
+                DetailRow(Icons.Filled.Person, "Người liên hệ", job?.employerName ?: "")
                 Spacer(modifier = Modifier.height(8.dp))
-                DetailRow(Icons.Filled.Email, "Email", job.employerEmail)
-                if (job.employerPhone.isNotBlank()) {
+                DetailRow(Icons.Filled.Email, "Email", job?.employerEmail ?: "")
+                if (job?.employerPhone?.isNotBlank() ?: false) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    DetailRow(Icons.Filled.Phone, "Điện thoại", job.employerPhone)
+                    DetailRow(Icons.Filled.Phone, "Điện thoại", job?.employerPhone ?: "")
                 }
             }
         }
@@ -413,12 +420,16 @@ fun JobDetailSheet(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        GradientButton(
-            text = if (isApplying) "Đang gửi..." else "Ứng tuyển ngay",
-            onClick = onApplyClick,
-            isLoading = isApplying,
-            enabled = !isApplying
-        )
+        if(!isEmployer) {
+            GradientButton(
+                text = if (isApplying) "Đang gửi..." else "Ứng tuyển ngay",
+                onClick = onApplyClick,
+                isLoading = isApplying,
+                enabled = !isApplying
+            )
+        }else {
+
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
     }

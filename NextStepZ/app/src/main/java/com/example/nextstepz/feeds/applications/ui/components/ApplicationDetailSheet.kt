@@ -221,77 +221,12 @@ fun ApplicationDetailSheet(
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = application.resumeFileName.ifEmpty { "CV_${application.studentName.replace(" ", "_")}.pdf" },
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = TextPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = application.cvUrl,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TextTertiary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
         HorizontalDivider(color = GlassBorder.copy(alpha = 0.3f))
         Spacer(modifier = Modifier.height(20.dp))
-
-        SectionTitle("Thư giới thiệu")
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(GlassWhite)
-                .border(1.dp, GlassBorder, RoundedCornerShape(14.dp))
-                .padding(16.dp)
-        ) {
-            Text(
-                text = application.coverLetter,
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
-                lineHeight = 22.sp
-            )
-        }
-
-        if (application.notes.isNotBlank()) {
-            Spacer(modifier = Modifier.height(20.dp))
-            HorizontalDivider(color = GlassBorder.copy(alpha = 0.3f))
-            Spacer(modifier = Modifier.height(20.dp))
-
-            SectionTitle("Ghi chú nhà tuyển dụng")
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(AccentAmber.copy(alpha = 0.08f))
-                    .border(1.dp, AccentAmber.copy(alpha = 0.2f), RoundedCornerShape(14.dp))
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = application.notes,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
-                    lineHeight = 22.sp
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
 
         if (application.status == ApplicationStatus.Pending) {
             Text(

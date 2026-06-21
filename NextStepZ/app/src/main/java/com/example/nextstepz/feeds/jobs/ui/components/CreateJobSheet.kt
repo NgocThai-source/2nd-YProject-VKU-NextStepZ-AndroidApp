@@ -23,12 +23,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.AttachMoney
-import androidx.compose.material.icons.outlined.Business
 import androidx.compose.material.icons.outlined.CardGiftcard
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.outlined.WorkOutline
@@ -66,9 +64,6 @@ fun CreateJobSheet(
     onDismiss: () -> Unit,
     onPost: (
         title: String,
-        companyName: String,
-        companyAddress: String,
-        location: String,
         salaryMin: Int?,
         salaryMax: Int?,
         jobType: JobType,
@@ -83,9 +78,6 @@ fun CreateJobSheet(
     modifier: Modifier = Modifier
 ) {
     var title by remember { mutableStateOf("") }
-    var companyName by remember { mutableStateOf("") }
-    var companyAddress by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
     var salaryMin by remember { mutableStateOf("") }
     var salaryMax by remember { mutableStateOf("") }
     var selectedJobType by remember { mutableStateOf(JobType.FullTime) }
@@ -102,8 +94,8 @@ fun CreateJobSheet(
 
     val scrollState = rememberScrollState()
 
-    val isValid = title.isNotBlank() && companyName.isNotBlank() &&
-            location.isNotBlank() && description.isNotBlank()
+    // Chỉ cần Tiêu đề và Mô tả là bắt buộc
+    val isValid = title.isNotBlank() && description.isNotBlank()
 
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -159,36 +151,6 @@ fun CreateJobSheet(
                 label = "Tiêu đề công việc",
                 placeholder = "VD: Fresher Java Developer",
                 icon = Icons.Outlined.WorkOutline
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            FormTextField(
-                value = companyName,
-                onValueChange = { companyName = it },
-                label = "Tên công ty",
-                placeholder = "VD: FPT Software",
-                icon = Icons.Outlined.Business
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            FormTextField(
-                value = companyAddress,
-                onValueChange = { companyAddress = it },
-                label = "Địa chỉ công ty",
-                placeholder = "VD: Tòa nhà FPT Complex, Đà Nẵng",
-                icon = Icons.Outlined.Business
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            FormTextField(
-                value = location,
-                onValueChange = { location = it },
-                label = "Địa điểm làm việc",
-                placeholder = "VD: Đà Nẵng, Remote, TP. Hồ Chí Minh",
-                icon = Icons.Outlined.LocationOn
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -404,7 +366,7 @@ fun CreateJobSheet(
                         .filter { it.isNotEmpty() }
                     val website = if (companyWebsite.isNotBlank()) companyWebsite.trim() else null
                     onPost(
-                        title, companyName, companyAddress, location,
+                        title,
                         salaryMin.toIntOrNull(), salaryMax.toIntOrNull(),
                         selectedJobType, selectedExpLevel,
                         description, requirements, benefits, skills,

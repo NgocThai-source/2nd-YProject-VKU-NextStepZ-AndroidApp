@@ -1,17 +1,17 @@
 package com.example.nextstepz.feeds.applications.viewmodel
 
+import ApplicationRepository
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.nextstepz.feeds.applications.data.model.Application
 import com.example.nextstepz.feeds.applications.data.model.ApplicationStatus
-import com.example.nextstepz.feeds.applications.data.repository.ApplicationRepository
 import kotlinx.coroutines.launch
 
-class ApplicationsViewModel : ViewModel() {
+class ApplicationsViewModel(application: android.app.Application) : AndroidViewModel(application) {
 
-    private val repository = ApplicationRepository()
+    private val repository = ApplicationRepository(application)
 
     private val _uiState = mutableStateOf<ApplicationsUiState>(ApplicationsUiState.Loading)
     val uiState: State<ApplicationsUiState> = _uiState
@@ -64,30 +64,30 @@ class ApplicationsViewModel : ViewModel() {
         }
 
     val pendingCount: Int
-        get() = _allApplications.value.count {
-            it.status == ApplicationStatus.Pending
-        }
+        get() = _allApplications.value.count { it.status == ApplicationStatus.Pending }
 
     val interviewCount: Int
-        get() = _allApplications.value.count {
-            it.status == ApplicationStatus.Interview
-        }
+        get() = _allApplications.value.count { it.status == ApplicationStatus.Interview }
 
-    init {
-        loadApplications()
-    }
-
-    fun loadApplications() {
+    fun loadApplications(jobId: String?) {
         viewModelScope.launch {
             _uiState.value = ApplicationsUiState.Loading
-            repository.getApplications()
-                .onSuccess { apps ->
-                    _allApplications.value = apps.sortedByDescending { it.appliedAt }
-                    _uiState.value = ApplicationsUiState.Success(applications = apps)
+            try {
+                val response = if(jobId != null) {
+                    repository.getJobApplication(jobId)
+                }else {
+                    repository.getAllEmployerApplications()
                 }
-                .onFailure { error ->
-                    _uiState.value = ApplicationsUiState.Error(error.message ?: "Đã xảy ra lỗi")
+                if(response.success) {
+                    _allApplications.value = response.applications
+                    _uiState.value = ApplicationsUiState.Success(response.applications)
+                } else {
+                    _uiState.value = ApplicationsUiState.Error(response.message ?: "Lỗi tải dữ liệu")
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.value = ApplicationsUiState.Error(e.message ?: "Không thể kết nối máy chủ")
+            }
         }
     }
 
@@ -100,13 +100,9 @@ class ApplicationsViewModel : ViewModel() {
     }
 
     fun showApplicationDetail(appId: String) {
-        viewModelScope.launch {
-            repository.getApplicationById(appId)
-                .onSuccess { app ->
-                    if (app != null) {
-                        _detailState.value = ApplicationDetailState.Shown(app)
-                    }
-                }
+        val app = _allApplications.value.find { it.id == appId }
+        if (app != null) {
+            _detailState.value = ApplicationDetailState.Shown(app)
         }
     }
 
@@ -114,34 +110,37 @@ class ApplicationsViewModel : ViewModel() {
         _detailState.value = ApplicationDetailState.Hidden
     }
 
-    fun updateStatus(appId: String, newStatus: ApplicationStatus) {
-        viewModelScope.launch {
-            _isLoadingAction.value = true
-            repository.updateApplicationStatus(appId, newStatus)
-                .onSuccess { updated ->
-                    _allApplications.value = _allApplications.value.map {
-                        if (it.id == appId) updated else it
-                    }
-                    val statusLabel = updated.status.label
-                    _actionMessage.value = "Cập nhật trạng thái thành \"$statusLabel\" thành công"
-                    _detailState.value = ApplicationDetailState.Hidden
-                }
-                .onFailure {
-                    _actionMessage.value = "Cập nhật thất bại. Vui lòng thử lại."
-                }
-            _isLoadingAction.value = false
-        }
-    }
+//    fun updateStatus(appId: String, newStatus: ApplicationStatus) {
+//        viewModelScope.launch {
+//            _isLoadingAction.value = true
+//            try {
+//                // Truyền chuỗi ("Pending", "Interview", "Rejected") lên BE thông qua newStatus.name
+//                val response = repository.updateApplicationStatus(appId, newStatus.name)
+//
+//                if (response.success) {
+//                    // Update Local: Nhân bản list, tìm đúng ứng viên và đổi cờ status
+//                    _allApplications.value = _allApplications.value.map {
+//                        if (it.id == appId) it.copy(status = newStatus) else it
+//                    }
+//                    _actionMessage.value = response.message ?: "Cập nhật thành công"
+//                    _detailState.value = ApplicationDetailState.Hidden
+//                } else {
+//                    _actionMessage.value = response.message ?: "Cập nhật thất bại"
+//                }
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//                _actionMessage.value = "Lỗi kết nối. Vui lòng thử lại."
+//            } finally {
+//                _isLoadingAction.value = false
+//            }
+//        }
+//    }
 
+    // CHÚ Ý: Tính năng Ghi chú (Notes) hiện tại Backend của chúng ta chưa viết API
+    // Mình giữ nguyên cấu trúc này cho bạn, nhưng sau này bạn cần viết API BE cho nó nhé
     fun updateNotes(appId: String, notes: String) {
         viewModelScope.launch {
-            repository.updateApplicationNotes(appId, notes)
-                .onSuccess { updated ->
-                    _allApplications.value = _allApplications.value.map {
-                        if (it.id == appId) updated else it
-                    }
-                    _detailState.value = ApplicationDetailState.Shown(updated)
-                }
+            // Code cũ của bạn: repository.updateApplicationNotes...
         }
     }
 

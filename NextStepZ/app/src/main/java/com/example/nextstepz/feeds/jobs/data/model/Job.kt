@@ -1,5 +1,8 @@
 package com.example.nextstepz.feeds.jobs.data.model
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+
 enum class JobType(val label: String, val icon: String) {
     FullTime("Toàn thời gian", "schedule"),
     PartTime("Bán thời gian", "schedule"),
@@ -57,6 +60,7 @@ data class Job(
     val viewCount: Int = 0,
     val applicationCount: Int = 0,
     val isSaved: Boolean = false,
+    val isReported: Boolean = false,
     val isFeatured: Boolean = false,
     val employerId: String,
     val employerName: String,
@@ -75,6 +79,7 @@ data class Job(
         }
 
     val daysAgo: Int
+        @RequiresApi(Build.VERSION_CODES.O)
         get() {
             return try {
                 val posted = java.time.LocalDate.parse(postedAt.take(10))
@@ -85,6 +90,7 @@ data class Job(
         }
 
     val postedDisplay: String
+        @RequiresApi(Build.VERSION_CODES.O)
         get() = when (daysAgo) {
             0 -> "Hôm nay"
             1 -> "Hôm qua"

@@ -1,20 +1,22 @@
 package com.example.nextstepz.feeds.jobs.viewmodel
 
+import JobRepository
+import android.app.Application
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.nextstepz.auth.data.local.TokenManager
+import com.example.nextstepz.feeds.jobs.data.model.CreateJobRequest
 import com.example.nextstepz.feeds.jobs.data.model.ExperienceLevel
 import com.example.nextstepz.feeds.jobs.data.model.Job
 import com.example.nextstepz.feeds.jobs.data.model.JobCategory
 import com.example.nextstepz.feeds.jobs.data.model.JobFilterParams
 import com.example.nextstepz.feeds.jobs.data.model.JobType
-import com.example.nextstepz.feeds.jobs.data.repository.JobRepository
 import kotlinx.coroutines.launch
 
-class JobsViewModel : ViewModel() {
-
-    private val repository = JobRepository()
+class JobsViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = JobRepository(application)
 
     private val _uiState = mutableStateOf<JobsUiState>(JobsUiState.Loading)
     val uiState: State<JobsUiState> = _uiState
@@ -49,33 +51,43 @@ class JobsViewModel : ViewModel() {
     private val _allJobs = mutableStateOf(emptyList<Job>())
     private val _savedJobs = mutableStateOf(emptyList<Job>())
     private val _featuredJobs = mutableStateOf(emptyList<Job>())
+    private val tokenManager = TokenManager(application)
+    val isMyUserId = tokenManager.userId
 
     init {
         loadJobs()
-        loadFeaturedJobs()
+//        loadFeaturedJobs()
     }
+
+    val isEmployer: Boolean get() = tokenManager.userRole == "employer"
 
     fun loadJobs() {
         viewModelScope.launch {
             _uiState.value = JobsUiState.Loading
 
-            val params = JobFilterParams(
-                keyword = _searchQuery.value,
-                category = _selectedCategory.value
-            )
+            try {
+                val params = JobFilterParams(
+                    keyword = _searchQuery.value,
+                    category = _selectedCategory.value
+                )
 
-            repository.getJobs(params)
-                .onSuccess { jobs ->
-                    _allJobs.value = jobs
+                val response = repository.getJobs(params)
+
+                if (response.success) {
+                    _allJobs.value = response.jobs
+
                     _uiState.value = JobsUiState.Success(
-                        jobs = jobs,
+                        jobs = _allJobs.value,
                         featuredJobs = _featuredJobs.value,
                         savedJobs = _savedJobs.value
                     )
+                } else {
+                    _uiState.value = JobsUiState.Error(response.message)
                 }
-                .onFailure { error ->
-                    _uiState.value = JobsUiState.Error(error.message ?: "Đã xảy ra lỗi")
-                }
+            } catch (e: Exception) {
+                // Hứng lỗi rớt mạng, lỗi server...
+                _uiState.value = JobsUiState.Error(e.message ?: "Đã xảy ra lỗi kết nối")
+            }
         }
     }
 
@@ -83,58 +95,44 @@ class JobsViewModel : ViewModel() {
         viewModelScope.launch {
             _isRefreshing.value = true
 
-            val params = JobFilterParams(
-                keyword = _searchQuery.value,
-                category = _selectedCategory.value
-            )
+            try {
+                val params = JobFilterParams(
+                    keyword = _searchQuery.value,
+                    category = _selectedCategory.value
+                )
 
-            repository.getJobs(params)
-                .onSuccess { jobs ->
-                    _allJobs.value = jobs
+                val response = repository.getJobs(params)
+
+                if (response.success) {
+                    _allJobs.value = response.jobs
+                    updateUiState()
+                } else {
+                    _uiState.value = JobsUiState.Error(response.message)
                 }
-                .onFailure { error ->
-                    _uiState.value = JobsUiState.Error(error.message ?: "Đã xảy ra lỗi khi làm mới")
-                }
-
-            repository.getFeaturedJobs()
-                .onSuccess { featured ->
-                    _featuredJobs.value = featured
-                }
-
-            _uiState.value = JobsUiState.Success(
-                jobs = _allJobs.value,
-                featuredJobs = _featuredJobs.value,
-                savedJobs = _savedJobs.value
-            )
-
-            _isRefreshing.value = false
+            } catch (e: Exception) {
+                _uiState.value = JobsUiState.Error(e.message ?: "Đã xảy ra lỗi khi làm mới")
+            } finally {
+                // Bỏ vòng xoay loading dù thành công hay thất bại
+                _isRefreshing.value = false
+            }
         }
     }
 
-    private fun loadFeaturedJobs() {
-        viewModelScope.launch {
-            repository.getFeaturedJobs()
-                .onSuccess { jobs ->
-                    _featuredJobs.value = jobs
-                    if (_uiState.value is JobsUiState.Success) {
-                        _uiState.value = JobsUiState.Success(
-                            jobs = _allJobs.value,
-                            featuredJobs = jobs,
-                            savedJobs = _savedJobs.value
-                        )
-                    }
-                }
-        }
-    }
-
-    private fun loadSavedJobs() {
-        viewModelScope.launch {
-            repository.getSavedJobs()
-                .onSuccess { jobs ->
-                    _savedJobs.value = jobs
-                }
-        }
-    }
+//    private fun loadFeaturedJobs() {
+//        viewModelScope.launch {
+//            repository.getFeaturedJobs()
+//                .onSuccess { jobs ->
+//                    _featuredJobs.value = jobs
+//                    if (_uiState.value is JobsUiState.Success) {
+//                        _uiState.value = JobsUiState.Success(
+//                            jobs = _allJobs.value,
+//                            featuredJobs = jobs,
+//                            savedJobs = _savedJobs.value
+//                        )
+//                    }
+//                }
+//        }
+//    }
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
@@ -149,39 +147,68 @@ class JobsViewModel : ViewModel() {
 
     fun toggleSaveJob(jobId: String) {
         viewModelScope.launch {
-            repository.toggleSaveJob(jobId)
-                .onSuccess { updatedJob ->
+            try {
+                val response = repository.saveJob(jobId)
+                if (response.success) {
                     _allJobs.value = _allJobs.value.map {
-                        if (it.id == jobId) updatedJob else it
-                    }
-                    _featuredJobs.value = _featuredJobs.value.map {
-                        if (it.id == jobId) updatedJob else it
-                    }
-                    if (updatedJob.isSaved) {
-                        _savedJobs.value = _savedJobs.value + updatedJob
-                    } else {
-                        _savedJobs.value = _savedJobs.value.filter { it.id != jobId }
+                        job -> if (job.id == jobId) job.copy(isSaved = !job.isSaved) else job
                     }
                     updateUiState()
-
-                    if (_detailState.value is JobDetailState.Shown) {
-                        val detail = _detailState.value as JobDetailState.Shown
-                        if (detail.job.id == jobId) {
-                            _detailState.value = JobDetailState.Shown(updatedJob)
+                    if(_detailState.value is JobDetailState.Shown) {
+                        val currentDetail = _detailState.value as JobDetailState.Shown
+                        if(currentDetail.job?.id == jobId) {
+                            _detailState.value = JobDetailState.Shown(currentDetail.job.copy(isSaved = !currentDetail.job.isSaved))
                         }
                     }
+                }else {
+                    _uiState.value = JobsUiState.Error(response.message)
                 }
+            }catch (e: Exception){
+                e.printStackTrace()
+                _uiState.value = JobsUiState.Error("Lỗi kết nối: ${e.message}")
+            }
+        }
+    }
+
+    fun toggleUnSaveJob(jobId: String) {
+        viewModelScope.launch {
+            try {
+                val response = repository.unSaveJob(jobId)
+                if (response.success) {
+                    _allJobs.value = _allJobs.value.map {
+                            job -> if (job.id == jobId) job.copy(isSaved = false) else job
+                    }
+                    updateUiState()
+                    if(_detailState.value is JobDetailState.Shown) {
+                        val currentDetail = _detailState.value as JobDetailState.Shown
+                        if(currentDetail.job?.id == jobId) {
+                            _detailState.value = JobDetailState.Shown(currentDetail.job.copy(isSaved = !currentDetail.job.isSaved))
+                        }
+                    }
+                }else {
+                    _uiState.value = JobsUiState.Error(response.message)
+                }
+            }catch (e: Exception){
+                e.printStackTrace()
+                _uiState.value = JobsUiState.Error("Lỗi kết nối: ${e.message}")
+            }
         }
     }
 
     fun showJobDetail(jobId: String) {
         viewModelScope.launch {
-            repository.getJobById(jobId)
-                .onSuccess { job ->
-                    if (job != null) {
-                        _detailState.value = JobDetailState.Shown(job)
-                    }
+            try {
+                val response = repository.getJobById(jobId)
+
+                if (response.success && response.job != null ) {
+                    _detailState.value = JobDetailState.Shown(response.job)
+                } else {
+                    _uiState.value = JobsUiState.Error(response.message)
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.value = JobsUiState.Error("Lỗi kết nối: ${e.message}")
+            }
         }
     }
 
@@ -211,14 +238,19 @@ class JobsViewModel : ViewModel() {
     fun applyToJob(jobId: String) {
         viewModelScope.launch {
             _isApplying.value = true
-            repository.applyJob(jobId)
-                .onSuccess { message ->
-                    _applyMessage.value = message
+            try {
+                val response = repository.applyJob(jobId)
+                if (response.success) {
+                    _isApplying.value = false
+                    _applyMessage.value = response.message
+                } else {
+                    _isApplying.value = false
+                    _uiState.value = JobsUiState.Error(response.message)
                 }
-                .onFailure {
-                    _applyMessage.value = "Đã xảy ra lỗi khi ứng tuyển"
-                }
-            _isApplying.value = false
+            }catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.value = JobsUiState.Error("Lỗi kết nối: ${e.message}")
+            }
         }
     }
 
@@ -227,7 +259,11 @@ class JobsViewModel : ViewModel() {
     }
 
     fun showCreateJobSheet() {
-        _isCreateJobVisible.value = true
+        if (isEmployer) {
+            _isCreateJobVisible.value = true
+        } else {
+            _uiState.value = JobsUiState.Error("Bạn cần đăng ký thông tin Nhà tuyển dụng để sử dụng tính năng này.")
+        }
     }
 
     fun hideCreateJobSheet() {
@@ -236,9 +272,6 @@ class JobsViewModel : ViewModel() {
 
     fun createJob(
         title: String,
-        companyName: String,
-        companyAddress: String,
-        location: String,
         salaryMin: Int?,
         salaryMax: Int?,
         jobType: JobType,
@@ -247,21 +280,36 @@ class JobsViewModel : ViewModel() {
         requirements: List<String>,
         benefits: List<String>,
         skills: List<String>,
-        deadline: String,
-        companyWebsite: String? = null
+        deadline: String
     ) {
         viewModelScope.launch {
-            repository.createJob(
-                title, companyName, companyAddress, location,
-                salaryMin, salaryMax, jobType, experienceLevel,
-                description, requirements, benefits, skills, deadline,
-                companyWebsite
-            )
-                .onSuccess { newJob ->
-                    _allJobs.value = listOf(newJob) + _allJobs.value
-                    updateUiState()
-                    _isCreateJobVisible.value = false
+            try {
+                // 1. Gói dữ liệu
+                val request = CreateJobRequest(
+                    title = title,
+                    description = description,
+                    jobType = jobType.name,
+                    experienceLevel = experienceLevel.name,
+                    salaryMin = salaryMin,
+                    salaryMax = salaryMax,
+                    requirements = requirements,
+                    benefits = benefits,
+                    skills = skills,
+                    deadline = deadline
+                )
+
+                val response = repository.createJob(request)
+
+                if (response.success) {
+                    loadJobs() // Load lại danh sách mới nhất
+                    _isCreateJobVisible.value = false // Đóng bottom sheet
+                } else {
+                    _uiState.value = JobsUiState.Error(response.message)
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uiState.value = JobsUiState.Error("Lỗi kết nối: ${e.message}")
+            }
         }
     }
 
@@ -273,17 +321,28 @@ class JobsViewModel : ViewModel() {
         _reportState.value = ReportState.Hidden
     }
 
-    fun submitReport(jobId: String, reason: String) {
+    fun submitReport(jobId: String, reason: String, customText: String?) {
         viewModelScope.launch {
-            repository.reportJob(jobId, reason)
-                .onSuccess { message ->
-                    _reportState.value = ReportState.Hidden
-                }
-                .onFailure {
-                    _reportState.value = ReportState.Hidden
+                try {
+                    val response = repository.reportJob(jobId, reason, customText)
+                    if(response.success) {
+                        _allJobs.value = _allJobs.value.map {
+                            job -> if (job.id == jobId) job.copy(isReported = true) else job
+                        }
+                        updateUiState()// Render lại UI
+//                        Đóng Sheet báo cáo
+                        _reportState.value = ReportState.Hidden
+
+                    }else {
+                        _uiState.value = JobsUiState.Error(response.message)
+                    }
+                }catch (e: Exception) {
+                    e.printStackTrace()
+                    _uiState.value = JobsUiState.Error("Lỗi kết nối: ${e.message}")
                 }
         }
     }
+
 
     private fun updateUiState() {
         _uiState.value = JobsUiState.Success(
