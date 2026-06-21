@@ -84,6 +84,7 @@ fun JobDetailSheet(
 ) {
     val scrollState = rememberScrollState()
     val isEmployer = viewModel.isEmployer
+    val isGuest = viewModel.isGuest
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -420,7 +421,7 @@ fun JobDetailSheet(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        if(!isEmployer) {
+        if(!isEmployer && !isGuest) {
             GradientButton(
                 text = if (isApplying) "Đang gửi..." else "Ứng tuyển ngay",
                 onClick = onApplyClick,

@@ -144,8 +144,21 @@ class TokenManager(context: Context) {
             remove(KEY_GPA)
         }
     }
+    fun saveGuestProfile() {
+        prefs.edit {
+            // Xóa sạch token và dữ liệu cá nhân
+            clear()
 
+            // Chỉ lưu lại role là guest
+            putString(KEY_USER_ROLE, "guest")
+        }
+    }
     fun isLoggedIn(): Boolean = !token.isNullOrBlank()
+
+    fun isGuest(): Boolean {
+        // Là Guest nếu chưa đăng nhập, hoặc role được set rõ ràng là "guest", hoặc role bị rỗng
+        return !isLoggedIn() || userRole == "guest" || userRole.isNullOrBlank()
+    }
 
     fun clearAll() {
         prefs.edit { clear() }

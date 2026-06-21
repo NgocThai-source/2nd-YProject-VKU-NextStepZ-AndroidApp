@@ -2,6 +2,7 @@ package com.example.nextstepz
 
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -16,6 +17,10 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val logoutMessage = intent.getStringExtra("LOGOUT_MESSAGE")
+        if (!logoutMessage.isNullOrEmpty()) {
+            Toast.makeText(this, logoutMessage, Toast.LENGTH_LONG).show()
+        }
         enableEdgeToEdge()
         setContent {
             NextStepZTheme {

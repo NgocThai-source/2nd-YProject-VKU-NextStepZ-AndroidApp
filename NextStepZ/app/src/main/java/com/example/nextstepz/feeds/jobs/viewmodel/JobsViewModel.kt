@@ -60,6 +60,7 @@ class JobsViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     val isEmployer: Boolean get() = tokenManager.userRole == "employer"
+    val isGuest = tokenManager.isGuest()
 
     fun loadJobs() {
         viewModelScope.launch {

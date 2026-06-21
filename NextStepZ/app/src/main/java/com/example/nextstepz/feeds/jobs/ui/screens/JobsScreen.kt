@@ -239,22 +239,13 @@ fun JobsScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
-                                    Text(
-                                        text = "Danh sách việc làm",
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.SemiBold
-                                        ),
-                                        color = TextPrimary
-                                    )
-                                    if (viewModel.isEmployer) {
-                                        Text(
-                                            text = "Tin mới đăng cần Admin phê duyệt để hiển thị",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = TextSecondary.copy(alpha = 0.7f)
-                                        )
-                                    }
-                                }
+                                Text(
+                                    text = "Danh sách việc làm",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    color = TextPrimary
+                                )
                                 Text(
                                     text = "${state.jobs.size} việc",
                                     style = MaterialTheme.typography.bodySmall,
