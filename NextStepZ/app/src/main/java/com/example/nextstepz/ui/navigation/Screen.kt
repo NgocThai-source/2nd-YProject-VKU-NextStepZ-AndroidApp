@@ -34,6 +34,7 @@ sealed class Screen(val route: String) {
     data object Main : Screen("main")
     data object Home : Screen("home")
     data object CvProfile : Screen("cv_profile")
+    data object Notifications : Screen("notifications")
     data object Jobs : Screen("jobs")
     data object Feeds : Screen("feeds")
     data object Messages : Screen("messages")
@@ -69,7 +70,7 @@ data class BottomNavItem(
  */
 val bottomNavItems = listOf(
     BottomNavItem(Screen.Home, "Trang chủ", Icons.Outlined.Home),
-    BottomNavItem(Screen.CvProfile, "Thông báo", Icons.Outlined.Notifications),
+    BottomNavItem(Screen.Notifications, "Thông báo", Icons.Outlined.Notifications),
     BottomNavItem(Screen.Jobs, "Việc làm", Icons.Outlined.Work),
     BottomNavItem(Screen.Feeds, "Bài viết", Icons.AutoMirrored.Outlined.Article),
     BottomNavItem(Screen.Messages, "Tin Nhắn", Icons.AutoMirrored.Outlined.Chat),

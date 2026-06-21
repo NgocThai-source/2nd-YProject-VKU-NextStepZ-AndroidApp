@@ -19,6 +19,8 @@ import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Work
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,8 +34,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.nextstepz.auth.data.local.TokenManager
 import com.example.nextstepz.feeds.jobs.ui.screens.JobsScreen
+import com.example.nextstepz.notifications.data.NotificationCenter
+import com.example.nextstepz.notifications.ui.NotificationsScreen
 import com.example.nextstepz.ui.components.BottomNavBar
+import kotlinx.coroutines.delay
 import com.example.nextstepz.ui.navigation.Screen
 import com.example.nextstepz.ui.navigation.bottomNavItems
 import com.example.nextstepz.ui.navigation.BottomNavItem
@@ -58,6 +64,19 @@ fun MainScreen(
     val navBackStackEntry by innerNavController.currentBackStackEntryAsState()
     var currentRoute = navBackStackEntry?.destination?.route ?: Screen.Home.route
 
+    // Near real-time unread-notification badge: poll the count while Main is shown.
+    val appContext = LocalContext.current.applicationContext
+    val unreadCount by NotificationCenter.unreadCount.collectAsState()
+    LaunchedEffect(Unit) {
+        val userId = TokenManager(appContext).userId
+        if (!userId.isNullOrBlank()) {
+            while (true) {
+                NotificationCenter.refresh(userId)
+                delay(15_000)
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(modifier = Modifier.weight(1f)) {
@@ -70,6 +89,9 @@ fun MainScreen(
                     popExitTransition = { fadeOut(tween(TAB_TRANSITION, easing = FastOutSlowInEasing)) }
                 ) {
                     composable(Screen.Home.route) { HomeScreen() }
+                    composable(Screen.Notifications.route) {
+                        NotificationsScreen()
+                    }
                     composable(Screen.CvProfile.route) {
                         PlaceholderScreen("Hồ sơ CV", Icons.Outlined.Description)
                     }
@@ -111,6 +133,7 @@ fun MainScreen(
             BottomNavBar(
                 items = bottomNavItems,
                 currentRoute = currentRoute,
+                badgeRoutes = if (unreadCount > 0) setOf(Screen.Notifications.route) else emptySet(),
                 onItemClick = { item ->
                     if (currentRoute != item.screen.route) {
                         currentRoute = item.screen.route

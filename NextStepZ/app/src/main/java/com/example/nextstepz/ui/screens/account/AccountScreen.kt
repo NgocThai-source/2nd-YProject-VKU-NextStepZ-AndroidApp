@@ -55,6 +55,7 @@ import com.example.nextstepz.ui.components.GradientButton
 import com.example.nextstepz.ui.components.ProfileHeader
 import com.example.nextstepz.ui.components.ProfileMenuItem
 import com.example.nextstepz.ui.components.ProfileMenuType
+import com.example.nextstepz.posthistory.ui.PostHistoryScreen
 import com.example.nextstepz.ui.theme.DarkBackground
 import com.example.nextstepz.ui.theme.DarkSurface
 import com.example.nextstepz.ui.theme.ErrorRed
@@ -72,7 +73,7 @@ object AccountNavRoutes {
     const val REGISTER_EMPLOYER = "register_employer"
     const val PRIVACY = "privacy"
     const val FAVORITES = "favorites"
-    const val CV_STORAGE = "cv_storage"
+    const val POST_HISTORY = "post_history"
 }
 @Composable
 fun AccountScreen(
@@ -103,8 +104,8 @@ fun AccountScreen(
                 onNavigateToFavorites = {
                     navController.navigate(AccountNavRoutes.FAVORITES)
                 },
-                onNavigateToCvStorage = {
-                    navController.navigate(AccountNavRoutes.CV_STORAGE)
+                onNavigateToPostHistory = {
+                    navController.navigate(AccountNavRoutes.POST_HISTORY)
                 },
                 onNavigateToRegisterStudent = {
                     navController.navigate(AccountNavRoutes.REGISTER_STUDENT)
@@ -158,8 +159,8 @@ fun AccountScreen(
             )
         }
 
-        composable(AccountNavRoutes.CV_STORAGE) {
-            CvStorageScreen(
+        composable(AccountNavRoutes.POST_HISTORY) {
+            PostHistoryScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -174,7 +175,7 @@ private fun AccountMainContent(
     onNavigateToRegisterEmployer: () -> Unit,
     onNavigateToPrivacy: () -> Unit,
     onNavigateToFavorites: () -> Unit,
-    onNavigateToCvStorage: () -> Unit,
+    onNavigateToPostHistory: () -> Unit,
     onLogout: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -262,8 +263,8 @@ private fun AccountMainContent(
             Spacer(modifier = Modifier.height(12.dp))
 
             ProfileMenuItem(
-                type = ProfileMenuType.CvStorage,
-                onClick = onNavigateToCvStorage
+                type = ProfileMenuType.PostHistory,
+                onClick = onNavigateToPostHistory
             )
 
             Spacer(modifier = Modifier.height(12.dp))

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.PersonAdd
@@ -54,7 +55,7 @@ sealed class ProfileMenuType(
     data object Register : ProfileMenuType("Đăng ký vai trò", Icons.Outlined.PersonAdd)
     data object Privacy : ProfileMenuType("Quyền riêng tư", Icons.Outlined.Lock)
     data object Favorites : ProfileMenuType("Danh sách yêu thích", Icons.Outlined.Favorite)
-    data object CvStorage : ProfileMenuType("Lưu hồ sơ CV", Icons.Outlined.Folder)
+    data object PostHistory : ProfileMenuType("Lịch sử bài đăng", Icons.Outlined.History)
     data object Logout : ProfileMenuType("Đăng xuất", Icons.AutoMirrored.Outlined.Logout, isDanger = true)
 }
 

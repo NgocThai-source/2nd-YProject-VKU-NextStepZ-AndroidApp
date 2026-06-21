@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nextstepz.ui.navigation.BottomNavItem
 import com.example.nextstepz.ui.navigation.Screen
+import com.example.nextstepz.ui.theme.ErrorRed
 import com.example.nextstepz.ui.theme.GlassBorder
 import com.example.nextstepz.ui.theme.GradientEnd
 import com.example.nextstepz.ui.theme.GradientMid
@@ -49,7 +51,8 @@ fun BottomNavBar(
     items: List<BottomNavItem>,
     currentRoute: String,
     onItemClick: (BottomNavItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    badgeRoutes: Set<String> = emptySet(),
 ) {
     Box(
         modifier = modifier
@@ -80,6 +83,7 @@ fun BottomNavBar(
                 BottomNavItemView(
                     item = item,
                     isSelected = isSelected,
+                    showBadge = item.screen.route in badgeRoutes,
                     onClick = { onItemClick(item) }
                 )
             }
@@ -91,6 +95,7 @@ fun BottomNavBar(
 private fun BottomNavItemView(
     item: BottomNavItem,
     isSelected: Boolean,
+    showBadge: Boolean,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -129,19 +134,32 @@ private fun BottomNavItemView(
                 ),
             contentAlignment = Alignment.Center
         ) {
-            if (isSelected) {
-                GradientIcon(
-                    imageVector = item.icon,
-                    contentDescription = item.label,
-                    modifier = Modifier.size(24.dp)
-                )
-            } else {
-                Icon(
-                    imageVector = item.icon,
-                    contentDescription = item.label,
-                    tint = NavBarInactive,
-                    modifier = Modifier.size(22.dp)
-                )
+            Box(contentAlignment = Alignment.Center) {
+                if (isSelected) {
+                    GradientIcon(
+                        imageVector = item.icon,
+                        contentDescription = item.label,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = item.label,
+                        tint = NavBarInactive,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                if (showBadge) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 6.dp, y = (-4).dp)
+                            .size(9.dp)
+                            .clip(CircleShape)
+                            .background(ErrorRed)
+                            .border(1.5.dp, NavBarBackground, CircleShape)
+                    )
+                }
             }
         }
 
