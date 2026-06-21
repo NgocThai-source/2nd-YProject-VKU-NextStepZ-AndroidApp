@@ -2,6 +2,7 @@ package com.example.nextstepz.ui.screens.account
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Business
+import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.HourglassTop
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -35,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -66,6 +70,7 @@ import com.example.nextstepz.ui.theme.GradientMid
 import com.example.nextstepz.ui.theme.GradientStart
 import com.example.nextstepz.ui.theme.TextPrimary
 import com.example.nextstepz.ui.theme.TextSecondary
+import com.example.nextstepz.ui.theme.WarningYellow
 
 object AccountNavRoutes {
     const val MAIN = "account_main"
@@ -88,6 +93,8 @@ fun AccountScreen(
     val tokenManager = remember { TokenManager(context) }
     LaunchedEffect(Unit) {
         viewModel.loadUserData(tokenManager)
+        // Reflect any admin Approve/Reject decision on the employer registration.
+        viewModel.syncEmployerApproval(tokenManager)
     }
 
     NavHost(
@@ -233,15 +240,23 @@ private fun AccountMainContent(
                 UserRole.GUEST -> Unit
             }
 
+            EmployerStatusBanner(status = viewModel.employerStatus)
+
             Spacer(modifier = Modifier.height(24.dp))
 
             ProfileMenuItem(
                 type = ProfileMenuType.Register,
                 onClick = {
-                    if(viewModel.userRole != UserRole.GUEST) {
-                        Toast.makeText(context, "Bạn đã đăng ký vai trò rồi!", Toast.LENGTH_SHORT).show()
-                    } else {
-                        showRoleDialog = true
+                    when {
+                        viewModel.employerStatus == "pending" -> Toast.makeText(
+                            context,
+                            "Hồ sơ Nhà tuyển dụng của bạn đang chờ Admin duyệt.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        viewModel.userRole != UserRole.GUEST -> Toast.makeText(
+                            context, "Bạn đã đăng ký vai trò rồi!", Toast.LENGTH_SHORT
+                        ).show()
+                        else -> showRoleDialog = true
                     }
                 }
             )
@@ -404,6 +419,65 @@ private fun InfoRow(
             color = TextPrimary,
             modifier = Modifier.weight(0.58f)
         )
+    }
+}
+
+@Composable
+private fun EmployerStatusBanner(status: String?) {
+    when (status) {
+        "pending" -> StatusBannerCard(
+            accent = WarningYellow,
+            icon = Icons.Outlined.HourglassTop,
+            title = "Hồ sơ Nhà tuyển dụng đang chờ duyệt",
+            desc = "Admin đang xét duyệt đăng ký của bạn. Bạn sẽ nhận được thông báo ngay khi có kết quả."
+        )
+        "rejected" -> StatusBannerCard(
+            accent = ErrorRed,
+            icon = Icons.Outlined.Cancel,
+            title = "Đăng ký Nhà tuyển dụng bị từ chối",
+            desc = "Hồ sơ chưa được phê duyệt. Vui lòng kiểm tra lại thông tin doanh nghiệp và đăng ký lại."
+        )
+        else -> Unit
+    }
+}
+
+@Composable
+private fun StatusBannerCard(
+    accent: Color,
+    icon: ImageVector,
+    title: String,
+    desc: String,
+) {
+    Spacer(modifier = Modifier.height(8.dp))
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(accent.copy(alpha = 0.10f))
+            .border(1.dp, accent.copy(alpha = 0.30f), RoundedCornerShape(16.dp))
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = accent,
+            modifier = Modifier.size(26.dp)
+        )
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                color = accent
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = desc,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+            )
+        }
     }
 }
 

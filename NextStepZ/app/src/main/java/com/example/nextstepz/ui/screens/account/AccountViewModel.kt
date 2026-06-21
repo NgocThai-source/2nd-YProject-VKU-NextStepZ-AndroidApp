@@ -7,11 +7,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.nextstepz.account.data.EmployerApprovalRepository
 import com.example.nextstepz.auth.data.local.TokenManager
 import com.example.nextstepz.auth.data.model.EmployerProfileUi
 import com.example.nextstepz.auth.data.model.StudentProfileUi
 import com.example.nextstepz.auth.data.model.UserRole
 import com.example.nextstepz.feeds.jobs.viewmodel.JobsUiState
+import kotlinx.coroutines.launch
 
 class AccountViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -37,6 +40,10 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
     var employerProfile by mutableStateOf<EmployerProfileUi?>(null)
         private set
 
+    /** "pending" | "approved" | "rejected" | null (not an employer applicant). */
+    var employerStatus by mutableStateOf<String?>(null)
+        private set
+
     var showLogoutDialog by mutableStateOf(false)
         private set
     private val tokenManager = TokenManager(application)
@@ -50,6 +57,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         userPhone = tokenManager.userPhone ?: ""
         userRole = UserRole.fromValue(tokenManager.userRole)
         isVerified = tokenManager.isVerified
+        employerStatus = tokenManager.employerStatus
 
         studentProfile = null
         employerProfile = null
@@ -109,17 +117,37 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         profile: EmployerProfileUi,
         tokenManager: TokenManager
     ) {
-        userRole = UserRole.EMPLOYER
-        employerProfile = profile
+        // Registration is pending admin approval — the Employer role is NOT
+        // granted yet. The account stays a guest until an admin approves.
+        userRole = UserRole.GUEST
+        employerStatus = "pending"
+        employerProfile = null
         studentProfile = null
 
-        userName = profile.employerName
         userPhone = profile.phone
-
-        // KHÔNG set userEmail = profile.email
         userEmail = tokenManager.userEmail ?: ""
 
         tokenManager.saveEmployerProfile(profile)
+    }
+
+    /**
+     * Reflects an admin's Approve/Reject decision by reading employers.status
+     * from Supabase, so the role updates without forcing a re-login.
+     */
+    fun syncEmployerApproval(tokenManager: TokenManager) {
+        val uid = tokenManager.userId?.takeIf { it.isNotBlank() } ?: return
+        viewModelScope.launch {
+            val status = EmployerApprovalRepository.fetchStatus(uid) ?: return@launch
+            when (status.lowercase()) {
+                "approved" -> tokenManager.markEmployerApproved()
+                "rejected" -> tokenManager.markEmployerRejected()
+                "pending" -> {
+                    tokenManager.employerStatus = "pending"
+                    if (tokenManager.userRole == "employer") tokenManager.userRole = "guest"
+                }
+            }
+            loadUserData(tokenManager)
+        }
     }
 
     fun openLogoutDialog() {

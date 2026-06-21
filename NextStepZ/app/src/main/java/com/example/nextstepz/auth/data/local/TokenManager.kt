@@ -39,6 +39,11 @@ class TokenManager(context: Context) {
         get() = prefs.getString(KEY_USER_ROLE, null)
         set(value) = prefs.edit { putString(KEY_USER_ROLE, value) }
 
+    /** Employer approval state: "pending" | "approved" | "rejected" | null. */
+    var employerStatus: String?
+        get() = prefs.getString(KEY_EMPLOYER_STATUS, null)
+        set(value) = prefs.edit { putString(KEY_EMPLOYER_STATUS, value) }
+
     var isVerified: Boolean
         get() = prefs.getBoolean(KEY_IS_VERIFIED, false)
         set(value) = prefs.edit { putBoolean(KEY_IS_VERIFIED, value) }
@@ -125,7 +130,10 @@ class TokenManager(context: Context) {
         prefs.edit {
             putString(KEY_USER_NAME, profile.employerName)
             putString(KEY_USER_PHONE, profile.phone)
-            putString(KEY_USER_ROLE, "employer")
+            // Role is NOT granted here — the employer registration is pending
+            // admin approval. The role becomes "employer" only once approved.
+            putString(KEY_USER_ROLE, "guest")
+            putString(KEY_EMPLOYER_STATUS, "pending")
 
             putString(KEY_CONTACT_EMAIL, profile.email)
 
@@ -153,6 +161,22 @@ class TokenManager(context: Context) {
             putString(KEY_USER_ROLE, "guest")
         }
     }
+    /** Grant the Employer role after an admin approves the registration. */
+    fun markEmployerApproved() {
+        prefs.edit {
+            putString(KEY_USER_ROLE, "employer")
+            putString(KEY_EMPLOYER_STATUS, "approved")
+        }
+    }
+
+    /** Keep the account as guest after an admin rejects the registration. */
+    fun markEmployerRejected() {
+        prefs.edit {
+            putString(KEY_USER_ROLE, "guest")
+            putString(KEY_EMPLOYER_STATUS, "rejected")
+        }
+    }
+
     fun isLoggedIn(): Boolean = !token.isNullOrBlank()
 
     fun isGuest(): Boolean {
@@ -174,6 +198,7 @@ class TokenManager(context: Context) {
         private const val KEY_CONTACT_EMAIL = "contact_email"
         private const val KEY_USER_PHONE = "user_phone"
         private const val KEY_USER_ROLE = "user_role"
+        private const val KEY_EMPLOYER_STATUS = "employer_status"
         private const val KEY_IS_VERIFIED = "is_verified"
         private const val KEY_USER_AVATAR = "user_avatar"
 
