@@ -68,36 +68,33 @@ fun JobSearchBar(
     )
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(52.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(GlassWhite)
-            .border(
-                width = 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .padding(horizontal = 16.dp),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = Icons.Filled.Search,
-            contentDescription = "Tìm kiếm",
-            tint = if (isFocused) GradientMid else TextSecondary,
-            modifier = Modifier.size(20.dp)
-        )
 
-        Spacer(modifier = Modifier.width(12.dp))
-
-        Box(modifier = Modifier.weight(1f)) {
-            if (query.isEmpty()) {
-                Text(
-                    text = "Tìm việc làm, công ty, kỹ năng...",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = InputPlaceholder
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .height(52.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(GlassWhite)
+                .border(
+                    width = 1.dp,
+                    color = borderColor,
+                    shape = RoundedCornerShape(16.dp)
                 )
-            }
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Tìm kiếm",
+                tint = if (isFocused) GradientMid else TextSecondary,
+                modifier = Modifier.size(20.dp)
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
 
             BasicTextField(
                 value = query,
@@ -108,7 +105,9 @@ fun JobSearchBar(
                     fontSize = MaterialTheme.typography.bodyMedium.fontSize
                 ),
                 cursorBrush = SolidColor(GradientMid),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Search
+                ),
                 keyboardActions = KeyboardActions(
                     onSearch = {
                         onSearch(query)
@@ -116,18 +115,33 @@ fun JobSearchBar(
                     }
                 ),
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .weight(1f)
                     .focusRequester(focusRequester)
-                    .onFocusChanged { isFocused = it.isFocused }
+                    .onFocusChanged {
+                        isFocused = it.isFocused
+                    },
+                decorationBox = { innerTextField ->
+                    Box(
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        if (query.isEmpty()) {
+                            Text(
+                                text = "Tìm kiếm công việc...",
+                                color = InputPlaceholder,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
             )
 
             if (query.isNotEmpty()) {
                 IconButton(
-                    onClick = { onQueryChange("") },
-                    modifier = Modifier.align(Alignment.CenterEnd)
+                    onClick = { onQueryChange("") }
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Clear,
+                        imageVector = Icons.Default.Clear,
                         contentDescription = "Xóa",
                         tint = TextSecondary,
                         modifier = Modifier.size(18.dp)
@@ -140,23 +154,23 @@ fun JobSearchBar(
 
         Box(
             modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(10.dp))
+                .size(52.dp)
+                .clip(RoundedCornerShape(16.dp))
                 .background(
-                    if (isFocused) GradientMid.copy(alpha = 0.15f)
-                    else GlassBorder.copy(alpha = 0.3f)
+                    if (isFocused)
+                        GradientMid.copy(alpha = 0.15f)
+                    else
+                        GlassBorder.copy(alpha = 0.3f)
                 ),
             contentAlignment = Alignment.Center
         ) {
             IconButton(
-                onClick = onFilterClick,
-                modifier = Modifier.size(36.dp)
+                onClick = onFilterClick
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Tune,
                     contentDescription = "Bộ lọc",
-                    tint = if (isFocused) GradientMid else TextSecondary,
-                    modifier = Modifier.size(18.dp)
+                    tint = if (isFocused) GradientMid else TextSecondary
                 )
             }
         }

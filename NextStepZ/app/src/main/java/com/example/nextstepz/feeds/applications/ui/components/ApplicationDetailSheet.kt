@@ -37,13 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nextstepz.feeds.applications.data.model.Application
 import com.example.nextstepz.feeds.applications.data.model.ApplicationStatus
-import com.example.nextstepz.ui.theme.AccentAmber
 import com.example.nextstepz.ui.theme.DarkBackground
 import com.example.nextstepz.ui.theme.ErrorRed
 import com.example.nextstepz.ui.theme.GlassBorder
@@ -191,43 +190,6 @@ fun ApplicationDetailSheet(
         HorizontalDivider(color = GlassBorder.copy(alpha = 0.3f))
         Spacer(modifier = Modifier.height(20.dp))
 
-        SectionTitle("Hồ sơ CV")
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(GlassWhite)
-                .border(1.dp, GlassBorder, RoundedCornerShape(14.dp))
-                .padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(GradientMid.copy(alpha = 0.12f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Description,
-                        contentDescription = null,
-                        tint = GradientMid,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-        HorizontalDivider(color = GlassBorder.copy(alpha = 0.3f))
-        Spacer(modifier = Modifier.height(20.dp))
-
         if (application.status == ApplicationStatus.Pending) {
             Text(
                 text = "Cập nhật trạng thái",
@@ -247,6 +209,7 @@ fun ApplicationDetailSheet(
                     color = ErrorRed,
                     isLoading = isLoadingAction,
                     onClick = { onStatusUpdate(ApplicationStatus.Rejected) },
+                    enabled = !isLoadingAction && application.status == ApplicationStatus.Pending,
                     modifier = Modifier.weight(1f)
                 )
                 StatusActionButton(
@@ -255,7 +218,8 @@ fun ApplicationDetailSheet(
                     color = GradientMid,
                     isLoading = isLoadingAction,
                     onClick = { onStatusUpdate(ApplicationStatus.Interview) },
-                    modifier = Modifier.weight(1f)
+                    enabled = !isLoadingAction && application.status == ApplicationStatus.Pending,
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
@@ -310,11 +274,12 @@ private fun ContactRow(
 @Composable
 private fun StatusActionButton(
     text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     color: Color,
     isLoading: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean
 ) {
     Box(
         modifier = modifier

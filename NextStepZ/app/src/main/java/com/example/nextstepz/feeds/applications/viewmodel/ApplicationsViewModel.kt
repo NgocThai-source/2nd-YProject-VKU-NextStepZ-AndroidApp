@@ -110,37 +110,29 @@ class ApplicationsViewModel(application: android.app.Application) : AndroidViewM
         _detailState.value = ApplicationDetailState.Hidden
     }
 
-//    fun updateStatus(appId: String, newStatus: ApplicationStatus) {
-//        viewModelScope.launch {
-//            _isLoadingAction.value = true
-//            try {
-//                // Truyền chuỗi ("Pending", "Interview", "Rejected") lên BE thông qua newStatus.name
-//                val response = repository.updateApplicationStatus(appId, newStatus.name)
-//
-//                if (response.success) {
-//                    // Update Local: Nhân bản list, tìm đúng ứng viên và đổi cờ status
-//                    _allApplications.value = _allApplications.value.map {
-//                        if (it.id == appId) it.copy(status = newStatus) else it
-//                    }
-//                    _actionMessage.value = response.message ?: "Cập nhật thành công"
-//                    _detailState.value = ApplicationDetailState.Hidden
-//                } else {
-//                    _actionMessage.value = response.message ?: "Cập nhật thất bại"
-//                }
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//                _actionMessage.value = "Lỗi kết nối. Vui lòng thử lại."
-//            } finally {
-//                _isLoadingAction.value = false
-//            }
-//        }
-//    }
-
-    // CHÚ Ý: Tính năng Ghi chú (Notes) hiện tại Backend của chúng ta chưa viết API
-    // Mình giữ nguyên cấu trúc này cho bạn, nhưng sau này bạn cần viết API BE cho nó nhé
-    fun updateNotes(appId: String, notes: String) {
+    fun updateStatus(appId: String, newStatus: ApplicationStatus) {
         viewModelScope.launch {
-            // Code cũ của bạn: repository.updateApplicationNotes...
+            _isLoadingAction.value = true
+            try {
+                // Truyền chuỗi ("Pending", "Interview", "Rejected") lên BE thông qua newStatus.name
+                val response = repository.updateApplicationStatus(appId, newStatus.name)
+
+                if (response.success) {
+                    // Update Local: Nhân bản list, tìm đúng ứng viên và đổi cờ status
+                    _allApplications.value = _allApplications.value.map {
+                        if (it.id == appId) it.copy(status = newStatus) else it
+                    }
+                    _actionMessage.value = response.message ?: "Cập nhật thành công"
+                    _detailState.value = ApplicationDetailState.Hidden
+                } else {
+                    _actionMessage.value = response.message ?: "Cập nhật thất bại"
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _actionMessage.value = "Lỗi kết nối. Vui lòng thử lại."
+            } finally {
+                _isLoadingAction.value = false
+            }
         }
     }
 

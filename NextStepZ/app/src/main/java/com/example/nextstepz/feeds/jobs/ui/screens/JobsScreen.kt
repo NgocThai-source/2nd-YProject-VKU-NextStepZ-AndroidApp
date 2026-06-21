@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.nextstepz.feeds.jobs.data.model.Job
+import com.example.nextstepz.feeds.jobs.data.model.JobCategory
 import com.example.nextstepz.feeds.jobs.ui.components.CreateJobSheet
 import com.example.nextstepz.feeds.jobs.ui.components.FeaturedJobCard
 import com.example.nextstepz.feeds.jobs.ui.components.FeaturedJobShimmer
@@ -238,13 +239,22 @@ fun JobsScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "Danh sách việc làm",
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.SemiBold
-                                    ),
-                                    color = TextPrimary
-                                )
+                                Column {
+                                    Text(
+                                        text = "Danh sách việc làm",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                        color = TextPrimary
+                                    )
+                                    if (viewModel.isEmployer) {
+                                        Text(
+                                            text = "Tin mới đăng cần Admin phê duyệt để hiển thị",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = TextSecondary.copy(alpha = 0.7f)
+                                        )
+                                    }
+                                }
                                 Text(
                                     text = "${state.jobs.size} việc",
                                     style = MaterialTheme.typography.bodySmall,
@@ -255,7 +265,11 @@ fun JobsScreen(
 
                         if (state.jobs.isEmpty()) {
                             item {
-                                EmptyStateJobs()
+                                EmptyStateJobs(
+                                    isEmployer = viewModel.isEmployer,
+                                    isFilterActive = searchQuery.isNotBlank() || selectedCategory != JobCategory.All,
+                                    onRefresh = { viewModel.refreshJobs() }
+                                )
                             }
                         } else {
                             itemsIndexed(
@@ -575,33 +589,97 @@ private fun ErrorStateJobs(
 }
 
 @Composable
-private fun EmptyStateJobs() {
+private fun EmptyStateJobs(
+    isEmployer: Boolean,
+    isFilterActive: Boolean,
+    onRefresh: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = Icons.Filled.SearchOff,
-            contentDescription = null,
-            tint = TextSecondary.copy(alpha = 0.4f),
-            modifier = Modifier.size(64.dp)
+        Box(
+            modifier = Modifier
+                .size(100.dp)
+                .clip(CircleShape)
+                .background(GlassWhite.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (isFilterActive) Icons.Filled.SearchOff else Icons.Filled.FolderOpen,
+                contentDescription = null,
+                tint = GradientMid.copy(alpha = 0.6f),
+                modifier = Modifier.size(48.dp)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Text(
+            text = if (isFilterActive) "Không tìm thấy kết quả" else "Chưa có việc làm nào",
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Bold
+            ),
+            color = TextPrimary,
+            textAlign = TextAlign.Center
         )
+        
         Spacer(modifier = Modifier.height(12.dp))
+        
+        val message = when {
+            isFilterActive -> "Hiện tại không có tin tuyển dụng nào phù hợp với tiêu chí của bạn. Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc để tìm thấy cơ hội mới nhé!"
+            isEmployer -> "Nếu bạn đã đăng tin tuyển dụng mới, xin vui lòng đợi Admin phê duyệt (thường từ 12-24h). Sau khi được duyệt, tin của bạn sẽ xuất hiện tại đây và tiếp cận được với nhiều ứng viên tiềm năng!"
+            else -> "Hiện tại hệ thống chưa có tin tuyển dụng nào mới. Bạn vui lòng quay lại sau hoặc thử làm mới trang để cập nhật thông tin mới nhất nhé!"
+        }
+        
         Text(
-            text = "Không tìm thấy việc làm phù hợp",
-            style = MaterialTheme.typography.titleMedium,
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
             color = TextSecondary,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 24.dp),
+            lineHeight = 22.sp
         )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Hãy thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc",
-            style = MaterialTheme.typography.bodySmall,
-            color = TextSecondary.copy(alpha = 0.6f),
-            textAlign = TextAlign.Center
-        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (isEmployer && !isFilterActive) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(GradientStart.copy(alpha = 0.1f))
+                    .border(1.dp, GradientStart.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = "Trạng thái: Đang chờ duyệt các tin mới",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = GradientStart
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(14.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(GradientStart, GradientMid, GradientEnd)
+                    )
+                )
+                .clickable(onClick = onRefresh)
+                .padding(horizontal = 24.dp, vertical = 12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Làm mới trang",
+                style = MaterialTheme.typography.labelLarge,
+                color = TextOnGradient
+            )
+        }
     }
 }
 

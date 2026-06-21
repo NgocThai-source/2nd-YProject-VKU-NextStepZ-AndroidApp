@@ -375,7 +375,8 @@ fun ApplicationManagementSheet(
                     ApplicationDetailSheet(
                         application = state.application,
                         isLoadingAction = isLoadingAction,
-                        onStatusUpdate = {
+                        onStatusUpdate = {newStatus ->
+                            viewModel.updateStatus(state.application.id, newStatus)
                         },
                         onDismiss = { viewModel.hideApplicationDetail() }
                     )
